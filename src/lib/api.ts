@@ -1,8 +1,31 @@
+import { obterRefreshToken, salvarSessao, limparSessao } from './auth'
+
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ''
 
 export class ApiError extends Error {}
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function tentarRenovarSessao(): Promise<boolean> {
+  const refreshToken = obterRefreshToken()
+  if (!refreshToken) return false
+  try {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
+    if (!res.ok) {
+      limparSessao()
+      return false
+    }
+    const data = await res.json()
+    salvarSessao(data)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const headers = new Headers(options.headers)
   headers.set('Content-Type', 'application/json')
 
@@ -13,7 +36,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (res.status === 204) return undefined as T
 
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new ApiError(data?.error ?? 'Erro inesperado ao falar com o servidor')
+  if (!res.ok) {
+    if (res.status === 401 && !isRetry) {
+      const renovou = await tentarRenovarSessao()
+      if (renovou) return request<T>(path, options, true)
+    }
+    throw new ApiError(data?.error ?? 'Erro inesperado ao falar com o servidor')
+  }
   return data as T
 }
 

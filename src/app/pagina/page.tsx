@@ -7,6 +7,7 @@ import Input from '@/components/Input'
 import Button from '@/components/Button'
 import Grain from '@/components/Grain'
 import Footer from '@/components/Footer'
+import GovHeader from '@/components/GovHeader'
 import { EmailIcon, CertificateIcon } from '@/components/icons'
 import { api, type Pagina, type Vinculo, type Avaliacao, type Certificado } from '@/lib/api'
 
@@ -181,7 +182,8 @@ export default function PaginaPage() {
   return (
     <>
       <Grain />
-      <main style={{ maxWidth: '640px', margin: '0 auto', padding: '3rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
+      <GovHeader />
+      <main style={{ maxWidth: '640px', margin: '0 auto', padding: '2rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <Suspense fallback={<p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>}>
           <PaginaDetalhe />
         </Suspense>

@@ -4,9 +4,20 @@ const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ''
 
 export class ApiError extends Error {}
 
+function redirecionarParaLoginAposFalhaDeRenovacao() {
+  if (typeof window === 'undefined') return
+  const rotasPublicas = ['/login', '/signup', '/convite']
+  if (rotasPublicas.some((rota) => window.location.pathname.startsWith(rota))) return
+  window.location.href = '/login'
+}
+
 async function tentarRenovarSessao(): Promise<boolean> {
   const refreshToken = obterRefreshToken()
-  if (!refreshToken) return false
+  if (!refreshToken) {
+    limparSessao()
+    redirecionarParaLoginAposFalhaDeRenovacao()
+    return false
+  }
   try {
     const res = await fetch(`${BASE_URL}/auth/refresh`, {
       method: 'POST',
@@ -15,12 +26,15 @@ async function tentarRenovarSessao(): Promise<boolean> {
     })
     if (!res.ok) {
       limparSessao()
+      redirecionarParaLoginAposFalhaDeRenovacao()
       return false
     }
     const data = await res.json()
     salvarSessao(data)
     return true
   } catch {
+    limparSessao()
+    redirecionarParaLoginAposFalhaDeRenovacao()
     return false
   }
 }

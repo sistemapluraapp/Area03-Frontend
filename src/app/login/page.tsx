@@ -8,7 +8,7 @@ import Button from '@/components/Button'
 import Grain from '@/components/Grain'
 import Footer from '@/components/Footer'
 import { EmailIcon, LockIcon, EyeIcon } from '@/components/icons'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { salvarSessao } from '@/lib/auth'
 import { LOGO_DATA_URI } from '@/lib/logo'
 
@@ -19,21 +19,29 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+  const [suspensa, setSuspensa] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim() || !password.trim()) {
       setErro('Preencha e-mail e senha')
+      setSuspensa(false)
       return
     }
     setLoading(true)
     setErro('')
+    setSuspensa(false)
     try {
       const auth = await api.login({ email: email.trim(), password })
       salvarSessao(auth)
       router.push('/')
-    } catch {
-      setErro('E-mail ou senha incorretos')
+    } catch (err) {
+      if (err instanceof ApiError && err.suspensa) {
+        setSuspensa(true)
+        setErro(err.message)
+      } else {
+        setErro('E-mail ou senha incorretos')
+      }
     } finally {
       setLoading(false)
     }
@@ -54,7 +62,13 @@ export default function LoginPage() {
             <p style={{ fontSize: '0.9375rem', color: 'var(--c-text-2)' }}>Entre com a conta do seu órgão/programa público</p>
           </div>
 
-          {erro && (
+          {erro && suspensa && (
+            <div style={{ marginBottom: '1rem', padding: '0.875rem 1rem', borderRadius: '0.75rem', background: 'rgba(245,158,11,0.16)', border: '1px solid rgba(245,158,11,0.45)', fontSize: '0.875rem', color: '#f59e0b', textAlign: 'center', fontWeight: 700 }}>
+              {erro}
+            </div>
+          )}
+
+          {erro && !suspensa && (
             <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', fontSize: '0.875rem', color: '#f87171', textAlign: 'center' }}>
               {erro}
             </div>
@@ -62,12 +76,24 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} noValidate>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
-              <Input label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} leadingIcon={<EmailIcon />} />
+              <Input
+                label="E-mail"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setSuspensa(false)
+                }}
+                leadingIcon={<EmailIcon />}
+              />
               <Input
                 label="Senha"
                 type={showPass ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setSuspensa(false)
+                }}
                 leadingIcon={<LockIcon />}
                 trailingIcon={
                   <button type="button" onClick={() => setShowPass((v) => !v)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', color: 'inherit' }}>

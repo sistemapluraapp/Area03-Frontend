@@ -2,7 +2,16 @@ import { obterRefreshToken, salvarSessao, limparSessao } from './auth'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ''
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  status?: number
+  suspensa?: boolean
+
+  constructor(message: string, options?: { status?: number; suspensa?: boolean }) {
+    super(message)
+    this.status = options?.status
+    this.suspensa = options?.suspensa
+  }
+}
 
 function redirecionarParaLoginAposFalhaDeRenovacao() {
   if (typeof window === 'undefined') return
@@ -55,7 +64,10 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
       const renovou = await tentarRenovarSessao()
       if (renovou) return request<T>(path, options, true)
     }
-    throw new ApiError(data?.error ?? 'Erro inesperado ao falar com o servidor')
+    throw new ApiError(data?.error ?? 'Erro inesperado ao falar com o servidor', {
+      status: res.status,
+      suspensa: data?.suspensa === true,
+    })
   }
   return data as T
 }

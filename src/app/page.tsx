@@ -40,7 +40,7 @@ export default function MinhasPaginasPage() {
           <Button onClick={() => router.push('/nova-pagina')}>+ Nova Página</Button>
         </div>
 
-        {erro && <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>{erro}</div>}
+        {erro && <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'var(--c-danger-soft)', border: '1px solid var(--c-danger-border)', color: 'var(--c-danger-text)' }}>{erro}</div>}
 
         {carregando ? (
           <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>

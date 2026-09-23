@@ -194,7 +194,7 @@ export default function AbaExperiencias({ rascunho: p, aplicarSalvo, opcoes }: P
                 inputRef.current?.click()
               }}
               aria-label="Trocar imagem da experiência"
-              style={{ width: '120px', height: '90px', borderRadius: '0.625rem', flexShrink: 0, border: '1px dashed var(--c-input-border)', background: e.imagem_url ? `url(${e.imagem_url}) center/cover` : 'var(--c-glass-bg-sm)', color: 'var(--c-text-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.75rem' }}
+              style={{ width: '120px', height: '90px', borderRadius: '0.625rem', flexShrink: 0, border: '1px dashed var(--c-input-border)', background: e.imagem_url ? `url("${e.imagem_url}") center/cover` : 'var(--c-glass-bg-sm)', color: 'var(--c-text-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.75rem' }}
             >
               {enviandoImagem === e.id ? 'Enviando…' : !e.imagem_url && <IconPhoto size={22} />}
             </button>

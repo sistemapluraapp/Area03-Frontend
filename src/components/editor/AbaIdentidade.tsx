@@ -37,7 +37,7 @@ export default function AbaIdentidade({ rascunho: p, salvo, alterar, aplicarSalv
   return (
     <>
       <Secao titulo="Imagens" descricao="A capa e a logo são as primeiras coisas que o visitante vê. Prefira fotos reais do local.">
-        <div style={{ position: 'relative', borderRadius: '1rem', overflow: 'hidden', aspectRatio: '16 / 9', maxHeight: '320px', width: '100%', background: p.capa_url ? `url(${p.capa_url}) center/cover` : 'linear-gradient(135deg,#1a7aff,#0062e6)' }}>
+        <div style={{ position: 'relative', borderRadius: '1rem', overflow: 'hidden', aspectRatio: '16 / 9', maxHeight: '320px', width: '100%', background: p.capa_url ? `url("${p.capa_url}") center/cover` : 'linear-gradient(135deg,#1a7aff,#0062e6)' }}>
           <button type="button" onClick={() => setEnviando('capa')} style={{ position: 'absolute', right: '0.75rem', bottom: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.35)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer' }}>
             <IconCamera size={16} /> {p.capa_url ? 'Trocar capa' : 'Adicionar capa'}
           </button>
@@ -45,7 +45,7 @@ export default function AbaIdentidade({ rascunho: p, salvo, alterar, aplicarSalv
             type="button"
             onClick={() => setEnviando('logo')}
             aria-label={p.logo_url ? 'Trocar logo' : 'Adicionar logo'}
-            style={{ position: 'absolute', left: '1rem', bottom: '1rem', width: '92px', height: '92px', borderRadius: '50%', border: '3px solid #fff', background: p.logo_url ? `url(${p.logo_url}) center/cover` : 'rgba(255,255,255,0.9)', color: '#1a7aff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,0.3)' }}
+            style={{ position: 'absolute', left: '1rem', bottom: '1rem', width: '92px', height: '92px', borderRadius: '50%', border: '3px solid #fff', background: p.logo_url ? `url("${p.logo_url}") center/cover` : 'rgba(255,255,255,0.9)', color: '#1a7aff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,0.3)' }}
           >
             {!p.logo_url && <IconCamera size={26} />}
           </button>

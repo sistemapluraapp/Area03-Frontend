@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
 import { IconCrop, IconPhotoUp, IconX, IconZoomIn, IconZoomOut } from '@tabler/icons-react'
+import Portal from './Portal'
 
 // perfil/logo: quadrada, recorte em círculo (estilo foto de perfil do WhatsApp)
 // capa: horizontal 16:9 (estilo imagem de cabeçalho do Google Forms)
@@ -57,6 +58,7 @@ async function recortar(src: string, area: Area, largura: number, altura: number
 
 function Moldura({ titulo, onClose, children }: { titulo: string; onClose: () => void; children: ReactNode }) {
   return (
+    <Portal>
     <div
       role="dialog"
       aria-modal="true"
@@ -103,6 +105,7 @@ function Moldura({ titulo, onClose, children }: { titulo: string; onClose: () =>
         <div style={{ padding: '1.25rem' }}>{children}</div>
       </div>
     </div>
+    </Portal>
   )
 }
 

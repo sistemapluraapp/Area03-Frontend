@@ -10,6 +10,7 @@ import Footer from '@/components/Footer'
 import { EmailIcon, LockIcon, EyeIcon } from '@/components/icons'
 import { api, ApiError } from '@/lib/api'
 import { salvarSessao } from '@/lib/auth'
+import { destinoSeguro } from '@/lib/destino'
 import { LOGO_DATA_URI } from '@/lib/logo'
 
 export default function LoginPage() {
@@ -34,7 +35,7 @@ export default function LoginPage() {
     try {
       const auth = await api.login({ email: email.trim(), password })
       salvarSessao(auth)
-      router.push('/')
+      router.push(destinoSeguro(new URLSearchParams(window.location.search).get('destino')))
     } catch (err) {
       if (err instanceof ApiError && err.suspensa) {
         setSuspensa(true)

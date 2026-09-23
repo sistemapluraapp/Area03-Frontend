@@ -1,191 +1,218 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import GlassCard from '@/components/GlassCard'
-import Input from '@/components/Input'
-import Button from '@/components/Button'
+import { Suspense, useCallback, useEffect, useMemo, useState, type ComponentType } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { IconArrowLeft, IconExternalLink } from '@tabler/icons-react'
 import Grain from '@/components/Grain'
 import Footer from '@/components/Footer'
-import GovHeader from '@/components/GovHeader'
-import { EmailIcon, CertificateIcon } from '@/components/icons'
-import { api, type Pagina, type Vinculo, type Avaliacao, type Certificado } from '@/lib/api'
+import Header from '@/components/GovHeader'
+import { Aviso } from '@/components/editor/Campos'
+import type { PropsAba } from '@/components/editor/tipos'
+import AbaIdentidade from '@/components/editor/AbaIdentidade'
+import AbaAparencia from '@/components/editor/AbaAparencia'
+import AbaAcessibilidade from '@/components/editor/AbaAcessibilidade'
+import AbaLocalizacao from '@/components/editor/AbaLocalizacao'
+import AbaHorarios from '@/components/editor/AbaHorarios'
+import AbaGaleria from '@/components/editor/AbaGaleria'
+import AbaExperiencias from '@/components/editor/AbaExperiencias'
+import AbaContato from '@/components/editor/AbaContato'
+import AbaAntesDeIr from '@/components/editor/AbaAntesDeIr'
+import AbaComentarios from '@/components/editor/AbaComentarios'
+import AbaEquipe from '@/components/editor/AbaEquipe'
+import AbaSelos from '@/components/editor/AbaSelos'
+import { apiPaginas, type CamposEditaveis, type Opcoes, type PaginaDetalhe } from '@/lib/apiPaginas'
+import { estaLogado } from '@/lib/auth'
 
-type Detalhe = Pagina & { vinculos: Vinculo[]; avaliacoes: Avaliacao[]; certificados: Certificado[] }
+const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://area01-frontend.pages.dev'
 
-function PaginaDetalhe() {
+const ABAS: { id: string; rotulo: string; Componente: ComponentType<PropsAba> }[] = [
+  { id: 'identidade', rotulo: 'Identidade', Componente: AbaIdentidade },
+  { id: 'aparencia', rotulo: 'Cor da página', Componente: AbaAparencia },
+  { id: 'acessibilidade', rotulo: 'Acessibilidade', Componente: AbaAcessibilidade },
+  { id: 'localizacao', rotulo: 'Localização', Componente: AbaLocalizacao },
+  { id: 'horarios', rotulo: 'Horários', Componente: AbaHorarios },
+  { id: 'galeria', rotulo: 'Galeria', Componente: AbaGaleria },
+  { id: 'experiencias', rotulo: 'Experiências', Componente: AbaExperiencias },
+  { id: 'contato', rotulo: 'Contato', Componente: AbaContato },
+  { id: 'antes', rotulo: 'Antes de ir e segurança', Componente: AbaAntesDeIr },
+  { id: 'comentarios', rotulo: 'Comentários', Componente: AbaComentarios },
+  { id: 'equipe', rotulo: 'Equipe', Componente: AbaEquipe },
+  { id: 'selos', rotulo: 'Selos e certificações', Componente: AbaSelos },
+]
+
+// Campos do rascunho que são salvos pelo botão "Salvar alterações"
+const CAMPOS_RASCUNHO: (keyof CamposEditaveis)[] = [
+  'nome', 'subtitulo', 'descricao_curta', 'descricao', 'slogan', 'diferencial', 'categoria', 'faixa_preco', 'tags', 'tema', 'cnpj',
+  'whatsapp', 'instagram', 'website', 'video_apresentacao', 'cep', 'endereco', 'cidade', 'uf', 'complemento', 'ponto_referencia',
+  'como_chegar_carro', 'como_chegar_transporte', 'rota_acessivel', 'horarios', 'feriados', 'requer_agendamento', 'tempo_medio',
+  'antecedencia', 'recursos_acessibilidade', 'destaques_acessibilidade', 'observacoes_recursos', 'antes_de_ir',
+  'antes_de_ir_observacoes', 'seguranca',
+]
+
+function diferencas(salvo: PaginaDetalhe, rascunho: PaginaDetalhe): CamposEditaveis {
+  const patch: Record<string, unknown> = {}
+  for (const campo of CAMPOS_RASCUNHO) {
+    if (JSON.stringify(salvo[campo] ?? null) !== JSON.stringify(rascunho[campo] ?? null)) patch[campo] = rascunho[campo]
+  }
+  // CNPJ só vai para o servidor quando a página ainda não tem um e o campo foi preenchido
+  if (salvo.cnpj || !patch.cnpj) delete patch.cnpj
+  return patch as CamposEditaveis
+}
+
+function Editor() {
+  const router = useRouter()
   const params = useSearchParams()
   const id = params.get('id') ?? ''
-  const [pagina, setPagina] = useState<Detalhe | null>(null)
+  const [aba, setAba] = useState(params.get('aba') ?? 'identidade')
+  const [salvo, setSalvo] = useState<PaginaDetalhe | null>(null)
+  const [rascunho, setRascunho] = useState<PaginaDetalhe | null>(null)
+  const [opcoes, setOpcoes] = useState<Opcoes | null>(null)
   const [erro, setErro] = useState('')
-  const [emailConvite, setEmailConvite] = useState('')
-  const [convidando, setConvidando] = useState(false)
-  const [respostas, setRespostas] = useState<Record<string, string>>({})
-
-  async function carregar() {
-    try {
-      const dados = await api.obterPagina(id)
-      setPagina(dados)
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Página não encontrada ou sem acesso')
-    }
-  }
+  const [salvando, setSalvando] = useState(false)
+  const [mensagem, setMensagem] = useState('')
 
   useEffect(() => {
-    if (id) carregar()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
+    if (!estaLogado()) {
+      router.replace(`/login?destino=${encodeURIComponent(`/pagina?id=${id}`)}`)
+      return
+    }
+    if (!id) return
+    Promise.all([apiPaginas.obter(id), apiPaginas.opcoes()])
+      .then(([p, o]) => {
+        setSalvo(p)
+        setRascunho(p)
+        setOpcoes(o)
+      })
+      .catch((e) => setErro(e instanceof Error ? e.message : 'Página não encontrada ou sem acesso'))
+  }, [id, router])
 
-  async function convidar(e: React.FormEvent) {
-    e.preventDefault()
-    if (!emailConvite.trim()) return
-    setConvidando(true)
+  const patch = useMemo(() => (salvo && rascunho ? diferencas(salvo, rascunho) : {}), [salvo, rascunho])
+  const alterado = Object.keys(patch).length > 0
+
+  useEffect(() => {
+    if (!alterado) return
+    const avisar = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', avisar)
+    return () => window.removeEventListener('beforeunload', avisar)
+  }, [alterado])
+
+  const alterar = useCallback((p: CamposEditaveis) => {
+    setMensagem('')
+    setRascunho((r) => (r ? { ...r, ...p } : r))
+  }, [])
+
+  const aplicarSalvo = useCallback((p: Partial<PaginaDetalhe>) => {
+    setSalvo((s) => (s ? { ...s, ...p } : s))
+    setRascunho((r) => (r ? { ...r, ...p } : r))
+  }, [])
+
+  async function salvar() {
+    if (!salvo || !alterado) return
+    setSalvando(true)
     setErro('')
     try {
-      await api.convidarColaborador(id, emailConvite.trim())
-      setEmailConvite('')
-      await carregar()
+      const atualizada = await apiPaginas.atualizar(salvo.id, patch)
+      setSalvo((s) => (s ? { ...s, ...atualizada } : s))
+      setRascunho((r) => (r ? { ...r, ...atualizada } : r))
+      setMensagem('Alterações salvas.')
     } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro ao convidar colaborador')
+      setErro(e instanceof Error ? e.message : 'Erro ao salvar')
     } finally {
-      setConvidando(false)
+      setSalvando(false)
     }
   }
 
-  async function remover(vinculoId: string) {
-    try {
-      await api.removerColaborador(id, vinculoId)
-      await carregar()
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro ao remover colaborador')
-    }
+  function trocarAba(nova: string) {
+    setAba(nova)
+    const url = new URL(window.location.href)
+    url.searchParams.set('aba', nova)
+    window.history.replaceState(null, '', url)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  async function responder(avaliacaoId: string) {
-    const resposta = respostas[avaliacaoId]?.trim()
-    if (!resposta) return
-    try {
-      await api.responderAvaliacao(avaliacaoId, resposta)
-      setRespostas((p) => ({ ...p, [avaliacaoId]: '' }))
-      await carregar()
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro ao responder avaliação')
-    }
-  }
+  if (erro && !salvo) return <Aviso tipo="erro">{erro}</Aviso>
+  if (!salvo || !rascunho || !opcoes) return <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>
 
-  async function solicitarCertificado() {
-    try {
-      await api.solicitarCertificado(id)
-      await carregar()
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro ao solicitar certificado')
-    }
-  }
-
-  if (erro && !pagina) {
-    return <div style={{ padding: '1rem', borderRadius: '0.75rem', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>{erro}</div>
-  }
-  if (!pagina) return <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>
+  const Atual = (ABAS.find((a) => a.id === aba) ?? ABAS[0]).Componente
 
   return (
     <>
-      <GlassCard variant="lg">
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--c-text-blue)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{pagina.tipo}</span>
-        <h2 style={{ margin: '0.4rem 0', fontSize: '1.375rem', fontWeight: 800 }}>{pagina.nome}</h2>
-        <p style={{ color: 'var(--c-text-2)' }}>{pagina.descricao}</p>
-      </GlassCard>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+        <button type="button" onClick={() => router.push('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.45rem 0.875rem', borderRadius: '9999px', border: '1px solid var(--c-input-border)', background: 'var(--c-glass-bg-sm)', color: 'var(--c-text-1)', fontWeight: 600, fontSize: '0.8125rem', fontFamily: 'inherit', cursor: 'pointer' }}>
+          <IconArrowLeft size={16} /> Minhas páginas
+        </button>
+        <h1 style={{ fontSize: '1.375rem', fontWeight: 800, letterSpacing: '-0.02em', flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salvo.nome}</h1>
+        <a href={`${AREA01_URL}/pagina?id=${salvo.id}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.45rem 0.875rem', borderRadius: '9999px', border: '1px solid var(--c-accent-soft-border)', color: 'var(--c-accent-text)', fontWeight: 600, fontSize: '0.8125rem', textDecoration: 'none' }}>
+          Ver página pública <IconExternalLink size={15} />
+        </a>
+      </div>
 
-      {erro && (
-        <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>{erro}</div>
+      {salvo.suspensa && (
+        <div style={{ marginBottom: '1rem' }}>
+          <Aviso tipo="erro">Esta página está suspensa pela administração da Plura e não aparece nas buscas.</Aviso>
+        </div>
       )}
 
-      <GlassCard style={{ marginTop: '1.5rem' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.0625rem', fontWeight: 700 }}>Colaboradores</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-          {pagina.vinculos.map((v) => (
-            <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', background: 'var(--c-glass-bg-sm)', borderRadius: '0.65rem' }}>
-              <span style={{ fontSize: '0.875rem' }}>
-                {(v.gov_conta_id ?? v.usuario_id ?? '').slice(0, 8)}… <span style={{ color: 'var(--c-text-3)' }}>({v.papel})</span>
-              </span>
-              {v.papel === 'colaborador' && (
-                <Button variant="danger" size="sm" onClick={() => remover(v.id)}>
-                  Remover
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-        <form onSubmit={convidar} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-          <div style={{ flex: 1 }}>
-            <Input label="Convidar por e-mail" placeholder="colega@orgao.gov.br" value={emailConvite} onChange={(e) => setEmailConvite(e.target.value)} leadingIcon={<EmailIcon />} />
-          </div>
-          <Button type="submit" loading={convidando}>
-            Convidar
-          </Button>
-        </form>
-      </GlassCard>
-
-      <GlassCard style={{ marginTop: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <CertificateIcon /> Certificado de Acessibilidade
-          </h3>
-          <Button size="sm" onClick={solicitarCertificado}>
-            Solicitar
-          </Button>
-        </div>
-        {pagina.certificados.length === 0 ? (
-          <p style={{ color: 'var(--c-text-3)', fontSize: '0.9rem' }}>Nenhuma solicitação ainda.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {pagina.certificados.map((cert) => (
-              <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--c-glass-bg-sm)', borderRadius: '0.65rem', fontSize: '0.875rem' }}>
-                <span>{new Date(cert.solicitado_em).toLocaleDateString('pt-BR')}</span>
-                <span style={{ fontWeight: 700, color: cert.status === 'aprovado' ? '#22c55e' : cert.status === 'reprovado' ? '#ef4444' : 'var(--c-text-2)' }}>{cert.status}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </GlassCard>
-
-      <h3 style={{ margin: '2rem 0 1rem', fontSize: '1.0625rem', fontWeight: 700 }}>Avaliações recebidas ({pagina.avaliacoes.length})</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-        {pagina.avaliacoes.map((a) => (
-          <GlassCard key={a.id} variant="sm">
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--c-text-blue)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              nota {a.nota}/5 {a.sinalizada && <span style={{ color: '#ef4444' }}>· sinalizada</span>}
-            </span>
-            <p style={{ margin: '0.4rem 0', fontSize: '0.9375rem' }}>{a.comentario}</p>
-            {a.resposta ? (
-              <p style={{ fontSize: '0.85rem', color: 'var(--c-text-2)', borderLeft: '2px solid var(--blue-500)', paddingLeft: '0.6rem' }}>Sua resposta: {a.resposta}</p>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <input
-                  placeholder="Responder…"
-                  value={respostas[a.id] ?? ''}
-                  onChange={(e) => setRespostas((p) => ({ ...p, [a.id]: e.target.value }))}
-                  style={{ flex: 1, padding: '0.5rem 0.75rem', background: 'var(--c-input-bg)', border: '1px solid var(--c-input-border)', borderRadius: '0.65rem', color: 'var(--c-input-text)', fontSize: '0.875rem', fontFamily: 'inherit' }}
-                />
-                <Button size="sm" onClick={() => responder(a.id)}>
-                  Enviar
-                </Button>
-              </div>
-            )}
-          </GlassCard>
+      <nav role="tablist" aria-label="Seções do editor" style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.5rem', marginBottom: '1.25rem', scrollbarWidth: 'thin' }}>
+        {ABAS.map((a) => (
+          <button
+            key={a.id}
+            role="tab"
+            aria-selected={aba === a.id}
+            onClick={() => trocarAba(a.id)}
+            style={{
+              flexShrink: 0,
+              padding: '0.5rem 0.95rem',
+              borderRadius: '9999px',
+              border: aba === a.id ? '1px solid var(--c-accent-soft-border)' : '1px solid var(--c-divider)',
+              background: aba === a.id ? 'var(--c-accent-soft)' : 'transparent',
+              color: aba === a.id ? 'var(--c-accent-text)' : 'var(--c-text-2)',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              cursor: 'pointer',
+            }}
+          >
+            {a.rotulo}
+          </button>
         ))}
+      </nav>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: alterado ? '6rem' : 0 }}>
+        <Atual rascunho={rascunho} salvo={salvo} alterar={alterar} aplicarSalvo={aplicarSalvo} opcoes={opcoes} />
       </div>
+
+      {(alterado || erro || mensagem) && (
+        <div role="region" aria-label="Salvar alterações" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 200, padding: '0.875rem 1rem', background: 'var(--c-modal-bg)', borderTop: '1px solid var(--c-divider)', boxShadow: '0 -8px 24px rgba(0,0,0,0.12)' }}>
+          <div style={{ maxWidth: '980px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <span style={{ flex: '1 1 200px', fontSize: '0.875rem', color: erro ? 'var(--c-danger-text)' : alterado ? 'var(--c-text-1)' : 'var(--c-success-text)', fontWeight: 600 }}>
+              {erro || (alterado ? 'Você tem alterações não salvas.' : mensagem)}
+            </span>
+            {alterado && (
+              <>
+                <button type="button" onClick={() => { setRascunho(salvo); setErro('') }} disabled={salvando} style={{ padding: '0.6rem 1.125rem', borderRadius: '0.75rem', border: '1px solid var(--c-btn-secondary-border)', background: 'var(--c-btn-secondary-bg)', color: 'var(--c-text-1)', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}>
+                  Descartar
+                </button>
+                <button type="button" onClick={salvar} disabled={salvando} style={{ padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg,#1a7aff,#0062e6)', color: '#fff', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                  {salvando ? 'Salvando…' : 'Salvar alterações'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }
 
-export default function PaginaPage() {
+export default function EditorPaginaPage() {
   return (
     <>
       <Grain />
-      <GovHeader />
-      <main style={{ maxWidth: '640px', margin: '0 auto', padding: '2rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
+      <Header />
+      <main style={{ maxWidth: '980px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <Suspense fallback={<p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>}>
-          <PaginaDetalhe />
+          <Editor />
         </Suspense>
       </main>
       <Footer />

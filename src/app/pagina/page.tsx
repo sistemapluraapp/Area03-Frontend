@@ -23,7 +23,7 @@ import AbaSelos from '@/components/editor/AbaSelos'
 import { apiPaginas, type CamposEditaveis, type Opcoes, type PaginaDetalhe } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
 
-const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://area01-frontend.pages.dev'
+const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://plura.app.br'
 
 const ABAS: { id: string; rotulo: string; Componente: ComponentType<PropsAba> }[] = [
   { id: 'identidade', rotulo: 'Identidade', Componente: AbaIdentidade },

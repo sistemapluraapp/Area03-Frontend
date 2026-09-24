@@ -16,6 +16,7 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_BACKEND_URL: https://area03-backend.sistemapluraapp.workers.dev
+          NEXT_PUBLIC_AREA01_URL: https://plura.app.br
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

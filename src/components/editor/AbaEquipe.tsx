@@ -49,7 +49,7 @@ export default function AbaEquipe({ rascunho: p, aplicarSalvo }: PropsAba) {
             </span>
             {v.papel === 'colaborador' && (
               <button type="button" onClick={() => remover(v.id)} aria-label="Remover colaborador" style={{ background: 'none', border: '1px solid var(--c-divider)', borderRadius: '0.5rem', padding: '0.35rem', color: 'var(--c-danger-text)', cursor: 'pointer', display: 'flex' }}>
-                <IconTrash size={16} />
+                <IconTrash size={16} aria-hidden />
               </button>
             )}
           </div>
@@ -62,7 +62,7 @@ export default function AbaEquipe({ rascunho: p, aplicarSalvo }: PropsAba) {
           </Campo>
         </div>
         <button type="submit" disabled={enviando || !email.trim()} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.125rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg,#1a7aff,#0062e6)', color: '#fff', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', opacity: enviando || !email.trim() ? 0.6 : 1 }}>
-          <IconUserPlus size={18} /> Convidar
+          <IconUserPlus size={18} aria-hidden /> Convidar
         </button>
       </form>
       {erro && <Aviso tipo="erro">{erro}</Aviso>}

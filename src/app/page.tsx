@@ -32,7 +32,7 @@ export default function MinhasPaginasPage() {
 
   const botaoNova = (
     <button type="button" onClick={() => router.push('/nova-pagina')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.6rem 1.125rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg,#1a7aff,#0062e6)', color: '#fff', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
-      <IconPlus size={18} /> Nova página
+      <IconPlus size={18} aria-hidden /> Nova página
     </button>
   )
 
@@ -40,7 +40,7 @@ export default function MinhasPaginasPage() {
     <>
       <Grain />
       <Header />
-      <main style={{ maxWidth: '1040px', margin: '0 auto', padding: '2rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
+      <main id="conteudo" tabIndex={-1} style={{ maxWidth: '1040px', margin: '0 auto', padding: '2rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Minhas páginas</h1>
           {botaoNova}
@@ -53,7 +53,7 @@ export default function MinhasPaginasPage() {
         ) : itens.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem 1.5rem', borderRadius: '1.25rem', border: 'var(--c-border)', background: 'var(--c-glass-bg)' }}>
             <div style={{ color: 'var(--c-text-3)', marginBottom: '0.75rem', display: 'flex', justifyContent: 'center' }}>
-              <IconBuildingStore size={36} stroke={1.5} />
+              <IconBuildingStore size={36} stroke={1.5} aria-hidden />
             </div>
             <p style={{ fontSize: '1.0625rem', fontWeight: 600, marginBottom: '0.25rem' }}>Você ainda não tem nenhuma página institucional</p>
             <p style={{ fontSize: '0.9rem', color: 'var(--c-text-2)', marginBottom: '1.25rem' }}>Crie a página institucional do seu órgão ou atrativo para começar.</p>

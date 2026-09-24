@@ -61,9 +61,9 @@ export default function NovaPaginaPage() {
     <>
       <Grain />
       <Header />
-      <main style={{ maxWidth: '720px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
+      <main id="conteudo" tabIndex={-1} style={{ maxWidth: '720px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <button type="button" onClick={() => router.push('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.45rem 0.875rem', borderRadius: '9999px', border: '1px solid var(--c-input-border)', background: 'var(--c-glass-bg-sm)', color: 'var(--c-text-1)', fontWeight: 600, fontSize: '0.8125rem', fontFamily: 'inherit', cursor: 'pointer', marginBottom: '1.25rem' }}>
-          <IconArrowLeft size={16} /> Minhas páginas
+          <IconArrowLeft size={16} aria-hidden /> Minhas páginas
         </button>
         <form onSubmit={criar} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <Secao titulo="Nova página institucional" descricao="Comece pelo essencial. Depois você completa acessibilidade, fotos, horários e experiências no editor.">

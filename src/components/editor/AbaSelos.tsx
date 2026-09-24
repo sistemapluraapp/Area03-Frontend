@@ -41,7 +41,7 @@ export default function AbaSelos({ rascunho: p, aplicarSalvo }: PropsAba) {
       <Secao titulo="Selos e certificações" descricao="Em breve: selos que mostram, com critérios claros, o que foi verificado no seu empreendimento.">
         <div style={{ position: 'relative', borderRadius: '1rem', padding: '1.25rem', border: '1px dashed var(--c-input-border)', background: 'var(--c-glass-bg-sm)' }}>
           <span style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '9999px', background: 'var(--c-accent-soft)', color: 'var(--c-accent-text)' }}>
-            <IconSparkles size={14} /> Em breve
+            <IconSparkles size={14} aria-hidden /> Em breve
           </span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.75rem', opacity: 0.75 }} aria-hidden>
             {SELOS_EXEMPLO.map((s) => (
@@ -54,7 +54,7 @@ export default function AbaSelos({ rascunho: p, aplicarSalvo }: PropsAba) {
             ))}
           </div>
           <button type="button" disabled style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.125rem', borderRadius: '0.75rem', border: '1px solid var(--c-btn-secondary-border)', background: 'var(--c-btn-secondary-bg)', color: 'var(--c-text-2)', fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed' }}>
-            <IconRosetteDiscountCheck size={18} /> Ver selos e solicitar
+            <IconRosetteDiscountCheck size={18} aria-hidden /> Ver selos e solicitar
           </button>
         </div>
       </Secao>

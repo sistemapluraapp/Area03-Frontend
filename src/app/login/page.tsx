@@ -6,6 +6,7 @@ import GlassCard from '@/components/GlassCard'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import Grain from '@/components/Grain'
+import AcessoRapido from '@/components/AcessoRapido'
 import Footer from '@/components/Footer'
 import { EmailIcon, LockIcon, EyeIcon } from '@/components/icons'
 import { api, ApiError } from '@/lib/api'
@@ -51,7 +52,8 @@ export default function LoginPage() {
   return (
     <>
       <Grain />
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', position: 'relative', zIndex: 1 }}>
+      <AcessoRapido />
+      <div id="conteudo" tabIndex={-1} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', position: 'relative', zIndex: 1 }}>
         <GlassCard variant="lg" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem 2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}

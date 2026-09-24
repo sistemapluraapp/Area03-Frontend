@@ -9,7 +9,7 @@ export function CampoWhatsapp({ valor, onChange }: { valor: string | null; onCha
   return (
     <div style={{ padding: '1.125rem', borderRadius: '1rem', border: '2px solid rgba(37,211,102,0.55)', background: 'rgba(37,211,102,0.08)', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#16a34a', fontWeight: 800 }}>
-        <IconBrandWhatsapp size={22} /> Contato WhatsApp
+        <IconBrandWhatsapp size={22} aria-hidden /> Contato WhatsApp
       </div>
       <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--c-text-2)', lineHeight: 1.55 }}>
         <strong style={{ color: 'var(--c-text-1)' }}>Este é o principal canal entre você e o visitante.</strong> O botão “Entrar em contato” da sua página abre uma

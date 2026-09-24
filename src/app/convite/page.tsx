@@ -6,6 +6,7 @@ import GlassCard from '@/components/GlassCard'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import Grain from '@/components/Grain'
+import AcessoRapido from '@/components/AcessoRapido'
 import Footer from '@/components/Footer'
 import { EmailIcon, LockIcon, UserIcon, BuildingIcon } from '@/components/icons'
 import { api } from '@/lib/api'
@@ -66,7 +67,7 @@ function ConviteConteudo() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', position: 'relative', zIndex: 1 }}>
+    <div id="conteudo" tabIndex={-1} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', position: 'relative', zIndex: 1 }}>
       <GlassCard variant="lg" style={{ width: '100%', maxWidth: '440px', padding: '2.5rem 2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -128,6 +129,7 @@ export default function ConvitePage() {
   return (
     <>
       <Grain />
+      <AcessoRapido />
       <Suspense fallback={<p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)', textAlign: 'center', paddingTop: '4rem' }}>carregando…</p>}>
         <ConviteConteudo />
       </Suspense>

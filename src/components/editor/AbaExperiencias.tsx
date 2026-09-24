@@ -196,14 +196,14 @@ export default function AbaExperiencias({ rascunho: p, aplicarSalvo, opcoes }: P
               aria-label="Trocar imagem da experiência"
               style={{ width: '120px', height: '90px', borderRadius: '0.625rem', flexShrink: 0, border: '1px dashed var(--c-input-border)', background: e.imagem_url ? `url("${e.imagem_url}") center/cover` : 'var(--c-glass-bg-sm)', color: 'var(--c-text-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.75rem' }}
             >
-              {enviandoImagem === e.id ? 'Enviando…' : !e.imagem_url && <IconPhoto size={22} />}
+              {enviandoImagem === e.id ? 'Enviando…' : !e.imagem_url && <IconPhoto size={22} aria-hidden />}
             </button>
             <div style={{ flex: '1 1 200px', minWidth: 0 }}>
               <p style={{ fontWeight: 700 }}>{e.nome}</p>
               <p style={{ fontSize: '0.8125rem', color: 'var(--c-text-2)', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
                 {e.duracao && (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <IconClock size={14} /> {e.duracao}
+                    <IconClock size={14} aria-hidden /> {e.duracao}
                   </span>
                 )}
                 {e.preco_a_partir != null && <span>a partir de {Number(e.preco_a_partir).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>}
@@ -212,17 +212,17 @@ export default function AbaExperiencias({ rascunho: p, aplicarSalvo, opcoes }: P
             </div>
             <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'flex-start' }}>
               <button type="button" onClick={() => setEditando(e)} aria-label="Editar" style={{ background: 'none', border: '1px solid var(--c-divider)', borderRadius: '0.5rem', padding: '0.35rem', color: 'var(--c-text-2)', cursor: 'pointer', display: 'flex' }}>
-                <IconEdit size={16} />
+                <IconEdit size={16} aria-hidden />
               </button>
               <button type="button" onClick={() => remover(e)} aria-label="Remover" style={{ background: 'none', border: '1px solid var(--c-divider)', borderRadius: '0.5rem', padding: '0.35rem', color: 'var(--c-danger-text)', cursor: 'pointer', display: 'flex' }}>
-                <IconTrash size={16} />
+                <IconTrash size={16} aria-hidden />
               </button>
             </div>
           </div>
         ))}
       </div>
       <button type="button" onClick={() => setEditando({ ...VAZIA })} style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.125rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg,#1a7aff,#0062e6)', color: '#fff', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' }}>
-        <IconPlus size={18} /> Nova experiência
+        <IconPlus size={18} aria-hidden /> Nova experiência
       </button>
     </Secao>
   )

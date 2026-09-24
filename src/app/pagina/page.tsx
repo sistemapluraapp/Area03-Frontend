@@ -46,7 +46,7 @@ const CAMPOS_RASCUNHO: (keyof CamposEditaveis)[] = [
   'whatsapp', 'instagram', 'website', 'video_apresentacao', 'cep', 'endereco', 'cidade', 'uf', 'complemento', 'ponto_referencia',
   'como_chegar_carro', 'como_chegar_transporte', 'rota_acessivel', 'horarios', 'feriados', 'requer_agendamento', 'tempo_medio',
   'antecedencia', 'recursos_acessibilidade', 'destaques_acessibilidade', 'observacoes_recursos', 'antes_de_ir',
-  'antes_de_ir_observacoes', 'seguranca',
+  'antes_de_ir_observacoes', 'seguranca', 'como_e_o_lugar', 'video_libras',
 ]
 
 function diferencas(salvo: PaginaDetalhe, rascunho: PaginaDetalhe): CamposEditaveis {
@@ -139,11 +139,11 @@ function Editor() {
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
         <button type="button" onClick={() => router.push('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.45rem 0.875rem', borderRadius: '9999px', border: '1px solid var(--c-input-border)', background: 'var(--c-glass-bg-sm)', color: 'var(--c-text-1)', fontWeight: 600, fontSize: '0.8125rem', fontFamily: 'inherit', cursor: 'pointer' }}>
-          <IconArrowLeft size={16} /> Minhas páginas
+          <IconArrowLeft size={16} aria-hidden /> Minhas páginas
         </button>
         <h1 style={{ fontSize: '1.375rem', fontWeight: 800, letterSpacing: '-0.02em', flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{salvo.nome}</h1>
         <a href={`${AREA01_URL}/pagina?id=${salvo.id}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.45rem 0.875rem', borderRadius: '9999px', border: '1px solid var(--c-accent-soft-border)', color: 'var(--c-accent-text)', fontWeight: 600, fontSize: '0.8125rem', textDecoration: 'none' }}>
-          Ver página pública <IconExternalLink size={15} />
+          Ver página pública <IconExternalLink size={15} aria-hidden />
         </a>
       </div>
 
@@ -210,7 +210,7 @@ export default function EditorPaginaPage() {
     <>
       <Grain />
       <Header />
-      <main style={{ maxWidth: '980px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
+      <main id="conteudo" tabIndex={-1} style={{ maxWidth: '980px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <Suspense fallback={<p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>}>
           <Editor />
         </Suspense>

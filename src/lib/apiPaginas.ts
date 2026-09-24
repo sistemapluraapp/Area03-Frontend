@@ -54,6 +54,8 @@ export interface PaginaCompleta {
   antes_de_ir: string[]
   antes_de_ir_observacoes: string | null
   seguranca: Partial<Record<CampoSeguranca, string>>
+  como_e_o_lugar: string | null
+  video_libras: string | null
   suspensa: boolean
   created_at: string
   updated_at: string

@@ -30,7 +30,7 @@ export default function AbaComentarios({ rascunho: p }: PropsAba) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.375rem' }}>
                 <span style={{ display: 'inline-flex', color: '#f59e0b' }} aria-label={`Nota ${a.nota} de 5`}>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <IconStarFilled key={i} size={14} style={{ opacity: i < a.nota ? 1 : 0.2 }} />
+                    <IconStarFilled key={i} size={14} style={{ opacity: i < a.nota ? 1 : 0.2 }} aria-hidden />
                   ))}
                 </span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--c-text-3)' }}>{new Date(a.created_at).toLocaleDateString('pt-BR')}</span>

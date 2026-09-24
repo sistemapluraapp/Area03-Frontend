@@ -40,7 +40,7 @@ export default function AbaAparencia({ rascunho: p, alterar }: PropsAba) {
               }}
             >
               <span aria-hidden style={{ width: '28px', height: '28px', borderRadius: '50%', background: t.amostra, border: '1px solid rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.codigo === 'branca' || t.codigo === 'amarelo' ? '#111827' : '#fff', flexShrink: 0 }}>
-                {ativo && <IconCheck size={16} stroke={2.5} />}
+                {ativo && <IconCheck size={16} stroke={2.5} aria-hidden />}
               </span>
               {t.rotulo}
             </button>

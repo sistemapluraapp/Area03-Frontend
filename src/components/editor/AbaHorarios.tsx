@@ -55,14 +55,14 @@ export default function AbaHorarios({ rascunho: p, alterar }: PropsAba) {
                     <input type="time" value={t.fecha} aria-label={`${rotulo}: fecha`} onChange={(e) => definirDia(codigo, turnos.map((x, j) => (j === i ? { ...x, fecha: e.target.value } : x)))} style={campoHora} />
                     {i === 1 && (
                       <button type="button" aria-label="Remover segundo turno" onClick={() => definirDia(codigo, turnos.slice(0, 1))} style={{ background: 'none', border: 'none', color: 'var(--c-danger-text)', cursor: 'pointer', display: 'flex' }}>
-                        <IconTrash size={16} />
+                        <IconTrash size={16} aria-hidden />
                       </button>
                     )}
                   </span>
                 ))}
                 {aberto && turnos.length < 2 && (
                   <button type="button" onClick={() => definirDia(codigo, [...turnos, { abre: '18:00', fecha: '22:00' }])} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: '1px dashed var(--c-input-border)', borderRadius: '0.5rem', padding: '0.35rem 0.625rem', color: 'var(--c-text-2)', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    <IconPlus size={14} /> 2º turno
+                    <IconPlus size={14} aria-hidden /> 2º turno
                   </button>
                 )}
               </div>

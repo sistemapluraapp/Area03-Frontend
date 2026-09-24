@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Button from '@/components/Button'
 import NotificationBell from '@/components/NotificationBell'
 import ModoToggle from './ModoToggle'
+import PainelAcessibilidade from './PainelAcessibilidade'
 import { UserIcon } from '@/components/icons'
 import { limparSessao } from '@/lib/auth'
 import { LOGO_DATA_URI } from '@/lib/logo'
@@ -27,6 +28,7 @@ export default function GovHeader() {
       <img src={LOGO_DATA_URI} alt="Plura" style={{ height: '28px', width: 'auto', objectFit: 'contain' }} draggable={false} />
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--c-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>área gov</span>
       <div style={{ flex: 1 }} />
+      <PainelAcessibilidade />
       <ModoToggle />
       <NotificationBell />
       <Button variant="ghost" size="sm" onClick={sair}>

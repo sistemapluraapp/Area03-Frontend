@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ReactN
 import Cropper, { type Area } from 'react-easy-crop'
 import { IconCrop, IconPhotoUp, IconX, IconZoomIn, IconZoomOut } from '@tabler/icons-react'
 import Portal from './Portal'
+import { useFocoPreso } from '@/lib/useFocoPreso'
 
 // perfil/logo: quadrada, recorte em círculo (estilo foto de perfil do WhatsApp)
 // capa: horizontal 16:9 (estilo imagem de cabeçalho do Google Forms)
@@ -57,9 +58,12 @@ async function recortar(src: string, area: Area, largura: number, altura: number
 }
 
 function Moldura({ titulo, onClose, children }: { titulo: string; onClose: () => void; children: ReactNode }) {
+  const refFoco = useRef<HTMLDivElement>(null)
+  useFocoPreso(refFoco)
   return (
     <Portal>
     <div
+      ref={refFoco}
       role="dialog"
       aria-modal="true"
       aria-label={titulo}
@@ -99,7 +103,7 @@ function Moldura({ titulo, onClose, children }: { titulo: string; onClose: () =>
             aria-label="Fechar"
             style={{ background: 'none', border: 'none', color: 'var(--c-text-2)', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}
           >
-            <IconX size={20} />
+            <IconX size={20} aria-hidden />
           </button>
         </div>
         <div style={{ padding: '1.25rem' }}>{children}</div>
@@ -253,7 +257,7 @@ export default function EnviarImagemModal({
               justifyContent: 'center',
             }}
           >
-            <IconPhotoUp size={26} stroke={1.6} />
+            <IconPhotoUp size={26} stroke={1.6} aria-hidden />
           </div>
           <div>
             <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600 }}>
@@ -272,7 +276,7 @@ export default function EnviarImagemModal({
             Cancelar
           </button>
           <button type="button" style={botaoPrimario} onClick={() => inputRef.current?.click()}>
-            <IconPhotoUp size={18} /> Enviar arquivo
+            <IconPhotoUp size={18} aria-hidden /> Enviar arquivo
           </button>
         </div>
       </Moldura>
@@ -340,7 +344,7 @@ export default function EnviarImagemModal({
             Cancelar
           </button>
           <button type="button" style={{ ...botaoPrimario, opacity: enviando || !area ? 0.6 : 1 }} onClick={confirmar} disabled={enviando || !area}>
-            <IconCrop size={18} /> {enviando ? 'Enviando…' : 'Salvar'}
+            <IconCrop size={18} aria-hidden /> {enviando ? 'Enviando…' : 'Salvar'}
           </button>
         </div>
       </div>

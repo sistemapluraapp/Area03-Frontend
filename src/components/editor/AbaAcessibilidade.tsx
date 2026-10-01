@@ -2,8 +2,10 @@
 
 import { IconStar, IconStarFilled } from '@tabler/icons-react'
 import Icone from '../Icone'
-import { AreaTexto, Aviso, Campo, Secao, Texto } from './Campos'
+import { Aviso, Campo, Secao, Texto } from './Campos'
 import type { PropsAba } from './tipos'
+import EditorRico from '../EditorRico'
+import { tamanhoTexto } from '@/lib/textoRico'
 
 // Recursos marcados por grupo. O nível de cada grupo (x/5) mostrado na
 // página pública é calculado pela proporção de recursos marcados no grupo.
@@ -107,8 +109,9 @@ export default function AbaAcessibilidade({ rascunho: p, alterar, opcoes }: Prop
         titulo="Como é o lugar"
         descricao="Descreva o ambiente e o percurso para quem não enxerga, na ordem em que a pessoa vai encontrar as coisas. Aparece na página com esse título e é lido pelos leitores de tela."
       >
-        <Campo rotulo="Descrição do ambiente e do percurso" contador={`${(p.como_e_o_lugar ?? '').length}/2000`}>
-          <AreaTexto
+        <Campo grupo rotulo="Descrição do ambiente e do percurso" contador={`${tamanhoTexto(p.como_e_o_lugar)}/2000`}>
+          <EditorRico
+            rotulo="Descrição do ambiente e do percurso"
             valor={p.como_e_o_lugar}
             onChange={(v) => alterar({ como_e_o_lugar: v })}
             max={2000}

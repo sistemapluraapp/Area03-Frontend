@@ -10,8 +10,10 @@ import { AreaTexto, Aviso, Campo, Grade, Secao, Selecao, Texto } from '@/compone
 import { CampoWhatsapp } from '@/components/editor/AbaContato'
 import { apiPaginas, cnpjValido, formatarCnpj, type OpcaoCatalogo } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
+import { useTituloPagina } from '@/lib/useTituloPagina'
 
 export default function NovaPaginaPage() {
+  useTituloPagina('Nova página institucional')
   const router = useRouter()
   const [nome, setNome] = useState('')
   const [cnpj, setCnpj] = useState('')

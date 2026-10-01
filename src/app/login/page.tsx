@@ -13,8 +13,10 @@ import { api, ApiError } from '@/lib/api'
 import { salvarSessao } from '@/lib/auth'
 import { destinoSeguro } from '@/lib/destino'
 import { LOGO_DATA_URI } from '@/lib/logo'
+import { useTituloPagina } from '@/lib/useTituloPagina'
 
 export default function LoginPage() {
+  useTituloPagina('Acesso institucional')
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

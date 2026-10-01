@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { AreaTexto, Campo, Grade, Secao, Texto } from './Campos'
+import { Campo, Grade, Secao, Texto } from './Campos'
 import type { PropsAba } from './tipos'
+import EditorRico from '../EditorRico'
 
 function formatarCep(valor: string) {
   const d = valor.replace(/\D/g, '').slice(0, 8)
@@ -57,14 +58,14 @@ export default function AbaLocalizacao({ rascunho: p, alterar }: PropsAba) {
       </Secao>
 
       <Secao titulo="Como chegar" descricao="Explique o caminho. O visitante precisa saber não só onde fica, mas como chegar com segurança.">
-        <Campo rotulo="Como chegar com cadeira de rodas (rota acessível)" ajuda="Diferencial da Plura: descreva o trajeto sem barreiras, entradas acessíveis, desníveis e obstáculos conhecidos.">
-          <AreaTexto valor={p.rota_acessivel} onChange={(v) => alterar({ rota_acessivel: v })} max={2000} />
+        <Campo grupo rotulo="Como chegar com cadeira de rodas (rota acessível)" ajuda="Diferencial da Plura: descreva o trajeto sem barreiras, entradas acessíveis, desníveis e obstáculos conhecidos.">
+          <EditorRico rotulo="Como chegar com cadeira de rodas" valor={p.rota_acessivel} onChange={(v) => alterar({ rota_acessivel: v })} max={2000} />
         </Campo>
-        <Campo rotulo="De carro" ajuda="Acesso, estacionamento e vagas reservadas.">
-          <AreaTexto valor={p.como_chegar_carro} onChange={(v) => alterar({ como_chegar_carro: v })} max={2000} linhas={3} />
+        <Campo grupo rotulo="De carro" ajuda="Acesso, estacionamento e vagas reservadas.">
+          <EditorRico rotulo="Como chegar de carro" valor={p.como_chegar_carro} onChange={(v) => alterar({ como_chegar_carro: v })} max={2000} linhas={3} />
         </Campo>
-        <Campo rotulo="De transporte público" ajuda="Linhas, pontos de parada e distância a pé.">
-          <AreaTexto valor={p.como_chegar_transporte} onChange={(v) => alterar({ como_chegar_transporte: v })} max={2000} linhas={3} />
+        <Campo grupo rotulo="De transporte público" ajuda="Linhas, pontos de parada e distância a pé.">
+          <EditorRico rotulo="Como chegar de transporte público" valor={p.como_chegar_transporte} onChange={(v) => alterar({ como_chegar_transporte: v })} max={2000} linhas={3} />
         </Campo>
       </Secao>
     </>

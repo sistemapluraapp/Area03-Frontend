@@ -2,10 +2,11 @@
 
 import { useRef, useState, type ChangeEvent } from 'react'
 import { IconClock, IconEdit, IconPhoto, IconPlus, IconTrash } from '@tabler/icons-react'
-import { AreaTexto, Aviso, Campo, Chip, Grade, Interruptor, Secao, Selecao, Texto } from './Campos'
+import { Aviso, Campo, Chip, Grade, Interruptor, Secao, Selecao, Texto } from './Campos'
 import { apiPaginas, type Experiencia } from '@/lib/apiPaginas'
 import { comprimirImagem } from '@/lib/comprimirImagem'
 import type { PropsAba } from './tipos'
+import EditorRico from '../EditorRico'
 
 const NIVEIS = [
   { valor: 'todos', rotulo: 'Todos os níveis' },
@@ -70,8 +71,8 @@ function FormExperiencia({ inicial, paginaId, recursosPagina, rotuloRecurso, onS
       <Campo rotulo="Nome da atividade *">
         <Texto valor={exp.nome ?? ''} onChange={(v) => alterar({ nome: v })} placeholder="Mergulho acessível" max={120} />
       </Campo>
-      <Campo rotulo="O que você vai encontrar">
-        <AreaTexto valor={exp.descricao ?? ''} onChange={(v) => alterar({ descricao: v })} max={3000} />
+      <Campo grupo rotulo="O que você vai encontrar">
+        <EditorRico rotulo="O que você vai encontrar" valor={exp.descricao ?? ''} onChange={(v) => alterar({ descricao: v })} max={3000} />
       </Campo>
       <Grade colunas={3}>
         <Campo rotulo="Duração">
@@ -92,11 +93,11 @@ function FormExperiencia({ inicial, paginaId, recursosPagina, rotuloRecurso, onS
       </Grade>
       <Interruptor ativo={!!exp.requer_acompanhamento} onChange={(v) => alterar({ requer_acompanhamento: v })} rotulo="Necessário estar acompanhado" />
       <Grade>
-        <Campo rotulo="Equipamentos fornecidos">
-          <AreaTexto valor={exp.equipamentos ?? ''} onChange={(v) => alterar({ equipamentos: v })} linhas={2} max={1000} />
+        <Campo grupo rotulo="Equipamentos fornecidos">
+          <EditorRico rotulo="Equipamentos fornecidos" valor={exp.equipamentos ?? ''} onChange={(v) => alterar({ equipamentos: v })} linhas={2} max={1000} />
         </Campo>
-        <Campo rotulo="O que levar">
-          <AreaTexto valor={exp.o_que_levar ?? ''} onChange={(v) => alterar({ o_que_levar: v })} linhas={2} max={1000} />
+        <Campo grupo rotulo="O que levar">
+          <EditorRico rotulo="O que levar" valor={exp.o_que_levar ?? ''} onChange={(v) => alterar({ o_que_levar: v })} linhas={2} max={1000} />
         </Campo>
       </Grade>
       {recursosPagina.length > 0 && (

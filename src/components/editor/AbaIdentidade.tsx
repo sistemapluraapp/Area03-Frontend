@@ -6,6 +6,8 @@ import EnviarImagemModal from '../EnviarImagemModal'
 import { AreaTexto, Aviso, Campo, Chip, Grade, Secao, Selecao, Texto } from './Campos'
 import { apiPaginas, cnpjValido, formatarCnpj } from '@/lib/apiPaginas'
 import type { PropsAba } from './tipos'
+import EditorRico from '../EditorRico'
+import { tamanhoTexto } from '@/lib/textoRico'
 
 const FAIXAS = [
   { valor: 1, rotulo: '$ · Econômico' },
@@ -86,8 +88,8 @@ export default function AbaIdentidade({ rascunho: p, salvo, alterar, aplicarSalv
         <Campo rotulo="Descrição curta" ajuda="Aparece nos cards da busca. Seja direto: o que é e para quem é." contador={`${p.descricao_curta?.length ?? 0}/200`}>
           <AreaTexto valor={p.descricao_curta} onChange={(v) => alterar({ descricao_curta: v })} max={200} linhas={2} />
         </Campo>
-        <Campo rotulo="Descrição completa" ajuda="Aparece em “Sobre o empreendimento”. Separe parágrafos com uma linha em branco e use “- ” no início da linha para listas." contador={`${p.descricao?.length ?? 0}/10000`}>
-          <AreaTexto valor={p.descricao} onChange={(v) => alterar({ descricao: v })} max={10000} linhas={8} />
+        <Campo grupo rotulo="Descrição completa" ajuda="Aparece em “Sobre o empreendimento”. Use a barra para negrito, listas, alinhamento e links." contador={`${tamanhoTexto(p.descricao)}/10000`}>
+          <EditorRico rotulo="Descrição completa" valor={p.descricao} onChange={(v) => alterar({ descricao: v })} max={10000} linhas={8} />
         </Campo>
         <Campo rotulo="Diferencial" ajuda="O que torna a experiência acessível e especial." contador={`${p.diferencial?.length ?? 0}/400`}>
           <AreaTexto valor={p.diferencial} onChange={(v) => alterar({ diferencial: v })} max={400} linhas={3} placeholder="Cardápio em Braille e em Libras, atendimento em Libras e sinalização visual." />

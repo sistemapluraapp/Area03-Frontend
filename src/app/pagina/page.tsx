@@ -22,6 +22,7 @@ import AbaEquipe from '@/components/editor/AbaEquipe'
 import AbaSelos from '@/components/editor/AbaSelos'
 import { apiPaginas, type CamposEditaveis, type Opcoes, type PaginaDetalhe } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
+import { useTituloPagina } from '@/lib/useTituloPagina'
 
 const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://plura.app.br'
 
@@ -70,6 +71,8 @@ function Editor() {
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState('')
+  const rotuloAba = (ABAS.find((a) => a.id === aba) ?? ABAS[0]).rotulo
+  useTituloPagina(salvo ? `${rotuloAba} — ${salvo.nome}` : 'Editar página')
 
   useEffect(() => {
     if (!estaLogado()) {

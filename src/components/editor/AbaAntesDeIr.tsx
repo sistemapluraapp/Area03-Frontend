@@ -3,6 +3,7 @@
 import { AreaTexto, Campo, Chip, Secao } from './Campos'
 import { CAMPOS_SEGURANCA, type CampoSeguranca } from '@/lib/apiPaginas'
 import type { PropsAba } from './tipos'
+import EditorRico from '../EditorRico'
 
 const ROTULOS_SEGURANCA: Record<CampoSeguranca, { rotulo: string; ajuda: string }> = {
   informacoes: { rotulo: 'Informações de segurança', ajuda: 'Orientações gerais apresentadas antes da atividade.' },
@@ -39,8 +40,8 @@ export default function AbaAntesDeIr({ rascunho: p, alterar, opcoes }: PropsAba)
 
       <Secao titulo="Segurança" descricao="Recomendado para passeios e atividades. Só os campos preenchidos aparecem na página.">
         {CAMPOS_SEGURANCA.map((campo) => (
-          <Campo key={campo} rotulo={ROTULOS_SEGURANCA[campo].rotulo} ajuda={ROTULOS_SEGURANCA[campo].ajuda}>
-            <AreaTexto valor={seguranca[campo] ?? ''} onChange={(v) => alterar({ seguranca: { ...seguranca, [campo]: v } })} max={2000} linhas={2} />
+          <Campo key={campo} grupo rotulo={ROTULOS_SEGURANCA[campo].rotulo} ajuda={ROTULOS_SEGURANCA[campo].ajuda}>
+            <EditorRico rotulo={ROTULOS_SEGURANCA[campo].rotulo} valor={seguranca[campo] ?? ''} onChange={(v) => alterar({ seguranca: { ...seguranca, [campo]: v } })} max={2000} linhas={2} />
           </Campo>
         ))}
       </Secao>

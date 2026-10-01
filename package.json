@@ -8,6 +8,12 @@
   },
   "dependencies": {
     "@tabler/icons-react": "^3.48.0",
+    "@tiptap/extension-text-align": "^3.31.4",
+    "@tiptap/extensions": "^3.31.4",
+    "@tiptap/pm": "^3.31.4",
+    "@tiptap/react": "^3.31.4",
+    "@tiptap/starter-kit": "^3.31.4",
+    "dompurify": "^3.4.16",
     "next": "^15.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

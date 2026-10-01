@@ -9,10 +9,12 @@ import Header from '@/components/GovHeader'
 import { Aviso } from '@/components/editor/Campos'
 import { apiPaginas, type PaginaCompleta } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
+import { useTituloPagina } from '@/lib/useTituloPagina'
 
 const PAPEL: Record<string, string> = { administrador: 'Administrador', colaborador: 'Colaborador' }
 
 export default function MinhasPaginasPage() {
+  useTituloPagina('Minhas páginas')
   const router = useRouter()
   const [itens, setItens] = useState<{ papel: string; paginas: PaginaCompleta }[]>([])
   const [carregando, setCarregando] = useState(true)

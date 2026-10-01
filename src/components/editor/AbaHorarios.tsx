@@ -1,9 +1,10 @@
 'use client'
 
 import { IconPlus, IconTrash } from '@tabler/icons-react'
-import { Campo, Grade, Interruptor, Secao, Texto, AreaTexto } from './Campos'
+import { Campo, Grade, Interruptor, Secao, Texto } from './Campos'
 import type { DiaSemana, Horarios, Turno } from '@/lib/apiPaginas'
 import type { PropsAba } from './tipos'
+import EditorRico from '../EditorRico'
 
 export const DIAS: { codigo: DiaSemana; rotulo: string }[] = [
   { codigo: 'seg', rotulo: 'Segunda' },
@@ -84,8 +85,8 @@ export default function AbaHorarios({ rascunho: p, alterar }: PropsAba) {
             <Texto valor={p.antecedencia} onChange={(v) => alterar({ antecedencia: v })} placeholder="Reservar com 2 dias de antecedência" max={80} />
           </Campo>
         </Grade>
-        <Campo rotulo="Feriados e datas especiais">
-          <AreaTexto valor={p.feriados} onChange={(v) => alterar({ feriados: v })} placeholder="Feriados: funciona normalmente. Fechado em 25/12 e 01/01." linhas={3} max={1000} />
+        <Campo grupo rotulo="Feriados e datas especiais">
+          <EditorRico rotulo="Feriados e datas especiais" valor={p.feriados} onChange={(v) => alterar({ feriados: v })} placeholder="Feriados: funciona normalmente. Fechado em 25/12 e 01/01." linhas={3} max={1000} />
         </Campo>
       </Secao>
     </>

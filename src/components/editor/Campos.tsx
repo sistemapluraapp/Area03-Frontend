@@ -29,16 +29,18 @@ export function Secao({ titulo, descricao, children }: { titulo: string; descric
   )
 }
 
-export function Campo({ rotulo, ajuda, contador, children, destaque }: { rotulo: string; ajuda?: ReactNode; contador?: string; children: ReactNode; destaque?: boolean }) {
+export function Campo({ rotulo, ajuda, contador, children, destaque, grupo }: { rotulo: string; ajuda?: ReactNode; contador?: string; children: ReactNode; destaque?: boolean; grupo?: boolean }) {
+  // grupo: o campo tem vários controles (ex.: editor rico com barra de botões) e não pode ser um <label>
+  const Elemento = grupo ? 'div' : 'label'
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', minWidth: 0 }}>
+    <Elemento style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', minWidth: 0 }}>
       <span style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', fontSize: destaque ? '0.9375rem' : '0.875rem', fontWeight: destaque ? 700 : 600, color: 'var(--c-input-label)' }}>
         {rotulo}
         {contador && <span style={{ fontWeight: 400, fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--c-text-3)' }}>{contador}</span>}
       </span>
       {children}
       {ajuda && <span style={{ fontSize: '0.8125rem', color: 'var(--c-input-helper)', lineHeight: 1.5 }}>{ajuda}</span>}
-    </label>
+    </Elemento>
   )
 }
 

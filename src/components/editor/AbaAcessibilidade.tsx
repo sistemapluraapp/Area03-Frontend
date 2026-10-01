@@ -122,10 +122,10 @@ export default function AbaAcessibilidade({ rascunho: p, alterar, opcoes }: Prop
       </Secao>
 
       <Secao
-        titulo="Apresentação em Libras"
+        titulo="Apresentação em Libras (opcional)"
         descricao="Um vídeo com intérprete de Libras apresentando o lugar. A página ganha o selo “Apresentação em Libras” e aparece no filtro de busca com esse nome."
       >
-        <Campo rotulo="Link do vídeo no YouTube">
+        <Campo rotulo="Link do vídeo no YouTube (opcional)" ajuda="Campo opcional. Se preenchido, a página mostra a seção “Apresentação em Libras”.">
           <Texto valor={p.video_libras} onChange={(v) => alterar({ video_libras: v })} placeholder="https://www.youtube.com/watch?v=..." inputMode="url" />
         </Campo>
         {p.video_libras && !/^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(p.video_libras.trim()) && (

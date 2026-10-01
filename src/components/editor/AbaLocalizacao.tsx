@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Campo, Grade, Secao, Texto } from './Campos'
+import { Aviso, Campo, Grade, Secao, Texto } from './Campos'
 import type { PropsAba } from './tipos'
 import EditorRico from '../EditorRico'
 
@@ -22,7 +22,7 @@ export default function AbaLocalizacao({ rascunho: p, alterar }: PropsAba) {
     try {
       const res = await fetch(`https://viacep.com.br/ws/${digitos}/json/`)
       const data = await res.json()
-      if (!data?.erro) alterar({ cep, endereco: data.logradouro || p.endereco, cidade: data.localidade || p.cidade, uf: data.uf || p.uf })
+      if (!data?.erro) alterar({ cep, endereco: data.logradouro || p.endereco, complemento: p.complemento || data.bairro || null, cidade: data.localidade || p.cidade, uf: data.uf || p.uf })
     } catch {
       // a busca de CEP só ajuda no preenchimento; o usuário pode digitar manualmente
     } finally {
@@ -54,6 +54,18 @@ export default function AbaLocalizacao({ rascunho: p, alterar }: PropsAba) {
         </Grade>
         <Campo rotulo="Ponto de referência">
           <Texto valor={p.ponto_referencia} onChange={(v) => alterar({ ponto_referencia: v })} placeholder="Em frente ao posto de salva-vidas 3" />
+        </Campo>
+        <Campo
+          rotulo="Link do Google Maps (opcional)"
+          ajuda="No Google Maps, abra o seu local, toque em “Compartilhar” e copie o link. O botão “Como chegar” da página passa a abrir exatamente esse ponto."
+        >
+          <Texto valor={p.mapa_link} onChange={(v) => alterar({ mapa_link: v })} placeholder="https://maps.app.goo.gl/…" inputMode="url" max={500} />
+        </Campo>
+        {p.mapa_link && !/^(https?:\/\/)?((www\.)?google\.[a-z.]+\/maps|maps\.google\.|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(p.mapa_link.trim()) && (
+          <Aviso>Este link não parece ser do Google Maps. Confira se ele abre o local certo.</Aviso>
+        )}
+        <Campo grupo rotulo="Comentários sobre a localização (opcional)" ajuda="Ex.: entrada pelo estacionamento lateral, portão azul, melhor acesso pela rua de trás.">
+          <EditorRico rotulo="Comentários sobre a localização" valor={p.localizacao_comentarios} onChange={(v) => alterar({ localizacao_comentarios: v })} max={2000} linhas={3} />
         </Campo>
       </Secao>
 

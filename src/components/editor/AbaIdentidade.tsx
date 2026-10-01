@@ -7,6 +7,7 @@ import { AreaTexto, Aviso, Campo, Chip, Grade, Secao, Selecao, Texto } from './C
 import { apiPaginas, cnpjValido, formatarCnpj } from '@/lib/apiPaginas'
 import type { PropsAba } from './tipos'
 import EditorRico from '../EditorRico'
+import ApagarPagina from './ApagarPagina'
 import { tamanhoTexto } from '@/lib/textoRico'
 
 const FAIXAS = [
@@ -121,6 +122,8 @@ export default function AbaIdentidade({ rascunho: p, salvo, alterar, aplicarSalv
           />
         )}
       </Secao>
+
+      <ApagarPagina id={salvo.id} nome={salvo.nome} />
 
       {enviando && (
         <EnviarImagemModal

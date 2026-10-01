@@ -27,6 +27,7 @@ export default function AbaAntesDeIr({ rascunho: p, alterar, opcoes }: PropsAba)
               key={item.codigo}
               ativo={marcados.includes(item.codigo)}
               icone={item.icone}
+              titulo={item.descricao ?? undefined}
               onClick={() => alterar({ antes_de_ir: marcados.includes(item.codigo) ? marcados.filter((m) => m !== item.codigo) : [...marcados, item.codigo] })}
             >
               {item.rotulo}

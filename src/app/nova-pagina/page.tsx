@@ -8,7 +8,7 @@ import Footer from '@/components/Footer'
 import Header from '@/components/GovHeader'
 import { AreaTexto, Aviso, Campo, Grade, Secao, Selecao, Texto } from '@/components/editor/Campos'
 import { CampoWhatsapp } from '@/components/editor/AbaContato'
-import { apiPaginas, cnpjValido, formatarCnpj, type OpcaoCatalogo } from '@/lib/apiPaginas'
+import { apiPaginas, cnpjValido, consultarCnpj, formatarCnpj, formatarTelefone, type DadosCnpj, type OpcaoCatalogo } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
 import { useTituloPagina } from '@/lib/useTituloPagina'
 
@@ -23,6 +23,8 @@ export default function NovaPaginaPage() {
   const [categorias, setCategorias] = useState<OpcaoCatalogo[]>([])
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [dadosCnpj, setDadosCnpj] = useState<DadosCnpj | null>(null)
+  const [consultaCnpj, setConsultaCnpj] = useState<'' | 'buscando' | 'nao_encontrado' | 'falhou'>('')
 
   useEffect(() => {
     if (!estaLogado()) {
@@ -38,6 +40,28 @@ export default function NovaPaginaPage() {
   const cnpjCompleto = cnpj.replace(/\D/g, '').length === 14
   const cnpjOk = cnpjCompleto && cnpjValido(cnpj)
 
+  // Com o CNPJ válido, busca os dados públicos na Receita e preenche o que estiver vazio
+  useEffect(() => {
+    setDadosCnpj(null)
+    setConsultaCnpj('')
+    if (!cnpjOk) return
+    let ativo = true
+    setConsultaCnpj('buscando')
+    consultarCnpj(cnpj)
+      .then((dados) => {
+        if (!ativo) return
+        if (!dados) return setConsultaCnpj('nao_encontrado')
+        setDadosCnpj(dados)
+        setConsultaCnpj('')
+        setNome((atual) => atual || dados.nome_fantasia || dados.razao_social)
+        if (dados.telefone?.length === 11) setWhatsapp((atual) => atual || formatarTelefone(dados.telefone as string))
+      })
+      .catch(() => ativo && setConsultaCnpj('falhou'))
+    return () => {
+      ativo = false
+    }
+  }, [cnpj, cnpjOk])
+
   async function criar(e: FormEvent) {
     e.preventDefault()
     setErro('')
@@ -51,6 +75,12 @@ export default function NovaPaginaPage() {
         whatsapp: whatsapp || undefined,
         categoria: categoria || undefined,
         descricao_curta: descricaoCurta.trim() || undefined,
+        // Endereço vindo do CNPJ: já deixa o mapa pronto (editável depois)
+        cep: dadosCnpj?.cep ?? undefined,
+        endereco: dadosCnpj?.endereco ?? undefined,
+        complemento: dadosCnpj?.bairro ?? undefined,
+        cidade: dadosCnpj?.cidade ?? undefined,
+        uf: dadosCnpj?.uf ?? undefined,
       })
       router.push(`/pagina?id=${pagina.id}&aba=identidade`)
     } catch (err) {
@@ -76,6 +106,23 @@ export default function NovaPaginaPage() {
               <Texto valor={cnpj} onChange={(v) => setCnpj(formatarCnpj(v))} placeholder="00.000.000/0000-00" inputMode="numeric" />
             </Campo>
             {cnpjCompleto && !cnpjOk && <Aviso tipo="erro">CNPJ inválido. Confira os dígitos.</Aviso>}
+            {consultaCnpj === 'buscando' && <Aviso>Buscando os dados do CNPJ na Receita Federal…</Aviso>}
+            {consultaCnpj === 'nao_encontrado' && <Aviso tipo="erro">CNPJ não encontrado na Receita Federal. Confira o número.</Aviso>}
+            {consultaCnpj === 'falhou' && <Aviso>Não foi possível consultar o CNPJ agora. Você pode preencher os dados manualmente.</Aviso>}
+            {dadosCnpj && (
+              <Aviso tipo={dadosCnpj.situacao && dadosCnpj.situacao.toUpperCase() !== 'ATIVA' ? 'erro' : 'sucesso'}>
+                <strong>{dadosCnpj.razao_social}</strong>
+                {dadosCnpj.situacao && <> · Situação: {dadosCnpj.situacao}</>}
+                {(dadosCnpj.endereco || dadosCnpj.cidade) && (
+                  <>
+                    <br />
+                    {[dadosCnpj.endereco, dadosCnpj.bairro, [dadosCnpj.cidade, dadosCnpj.uf].filter(Boolean).join(' - ')].filter(Boolean).join(' · ')}
+                  </>
+                )}
+                <br />
+                Nome e endereço foram preenchidos com os dados da Receita. Você pode ajustar tudo no editor.
+              </Aviso>
+            )}
             <Grade>
               <Campo rotulo="Categoria">
                 <Selecao valor={categoria} onChange={setCategoria} vazio="Selecione" opcoes={categorias.map((c) => ({ valor: c.codigo, rotulo: c.rotulo }))} />

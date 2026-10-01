@@ -11,6 +11,26 @@ export type Horarios = Partial<Record<DiaSemana, Turno[]>>
 export const CAMPOS_SEGURANCA = ['informacoes', 'requisitos', 'equipamentos', 'profissionais', 'procedimentos', 'contatos_emergencia'] as const
 export type CampoSeguranca = (typeof CAMPOS_SEGURANCA)[number]
 
+export const CANAIS_CONTATO = [
+  { valor: 'whatsapp', rotulo: 'WhatsApp', exemplo: '(82) 99999-9999' },
+  { valor: 'ligacao', rotulo: 'Ligação', exemplo: '(82) 3333-4444' },
+  { valor: 'email', rotulo: 'E-mail', exemplo: 'contato@empresa.com.br' },
+  { valor: 'sms', rotulo: 'SMS', exemplo: '(82) 99999-9999' },
+  { valor: 'instagram', rotulo: 'Instagram', exemplo: '@perfil' },
+  { valor: 'site', rotulo: 'Site', exemplo: 'https://www.empresa.com.br' },
+  { valor: 'presencial', rotulo: 'Presencial', exemplo: 'Link do Google Maps (opcional)' },
+  { valor: 'outro', rotulo: 'Outro', exemplo: 'https://…' },
+] as const
+export type CanalContato = (typeof CANAIS_CONTATO)[number]['valor']
+
+export interface ContatoPagina {
+  canal: CanalContato
+  titulo: string
+  descricao: string | null
+  link: string | null
+  preferencial: boolean
+}
+
 export interface PaginaCompleta {
   id: string
   tipo: 'privada' | 'publica'
@@ -56,6 +76,10 @@ export interface PaginaCompleta {
   seguranca: Partial<Record<CampoSeguranca, string>>
   como_e_o_lugar: string | null
   video_libras: string | null
+  contatos: ContatoPagina[]
+  mapa_link: string | null
+  localizacao_comentarios: string | null
+  excluida_em: string | null
   suspensa: boolean
   created_at: string
   updated_at: string
@@ -132,6 +156,7 @@ export interface OpcaoCatalogo {
   codigo: string
   rotulo: string
   icone: string | null
+  descricao?: string | null
 }
 
 export interface GrupoOpcoes extends OpcaoCatalogo {
@@ -146,7 +171,7 @@ export interface Opcoes {
   grupos_acessibilidade: GrupoOpcoes[]
 }
 
-export type CamposEditaveis = Partial<Omit<PaginaCompleta, 'id' | 'tipo' | 'legado' | 'logo_url' | 'capa_url' | 'latitude' | 'longitude' | 'suspensa' | 'created_at' | 'updated_at'>>
+export type CamposEditaveis = Partial<Omit<PaginaCompleta, 'id' | 'tipo' | 'legado' | 'logo_url' | 'capa_url' | 'latitude' | 'longitude' | 'suspensa' | 'excluida_em' | 'created_at' | 'updated_at'>>
 
 const imagem = (imagemBase64: string, extensao: string) => JSON.stringify({ imagem_base64: imagemBase64, extensao })
 
@@ -162,6 +187,11 @@ export const apiPaginas = {
 
   atualizar: (id: string, patch: CamposEditaveis) =>
     request<PaginaCompleta>(`/paginas/${id}`, { method: 'PUT', body: JSON.stringify(patch) }),
+
+  // Lixeira: some do público na hora; pode ser restaurada em até 30 dias
+  excluir: (id: string) => request<{ id: string; excluida_em: string }>(`/paginas/${id}`, { method: 'DELETE' }),
+
+  restaurar: (id: string) => request<PaginaCompleta>(`/paginas/${id}/restaurar`, { method: 'POST' }),
 
   uploadLogo: (id: string, base64: string, extensao: string) =>
     request<{ logo_url: string }>(`/paginas/${id}/logo`, { method: 'POST', body: imagem(base64, extensao) }),
@@ -223,4 +253,56 @@ export function formatarTelefone(valor: string): string {
   if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
   if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+}
+
+export const DIAS_LIXEIRA = 30
+
+export function diasRestantesLixeira(excluidaEm: string): number {
+  const fim = new Date(excluidaEm).getTime() + DIAS_LIXEIRA * 24 * 60 * 60 * 1000
+  return Math.max(0, Math.ceil((fim - Date.now()) / (24 * 60 * 60 * 1000)))
+}
+
+// Dados públicos do CNPJ (Receita Federal) para preencher o cadastro.
+// BrasilAPI e, se falhar, Minha Receita — ambas gratuitas e abertas ao navegador.
+export interface DadosCnpj {
+  razao_social: string
+  nome_fantasia: string | null
+  situacao: string | null
+  cep: string | null
+  endereco: string | null
+  bairro: string | null
+  cidade: string | null
+  uf: string | null
+  telefone: string | null
+  email: string | null
+}
+
+export async function consultarCnpj(valor: string): Promise<DadosCnpj | null> {
+  const cnpj = valor.replace(/\D/g, '')
+  const fontes = [`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, `https://minhareceita.org/${cnpj}`]
+  for (const url of fontes) {
+    try {
+      const res = await fetch(url)
+      if (res.status === 404) return null
+      if (!res.ok) continue
+      const d = await res.json()
+      const logradouro = [d.descricao_tipo_de_logradouro, d.logradouro].filter(Boolean).join(' ').trim()
+      const telefone = String(d.ddd_telefone_1 ?? '').replace(/\D/g, '') || null
+      return {
+        razao_social: d.razao_social,
+        nome_fantasia: d.nome_fantasia || null,
+        situacao: d.descricao_situacao_cadastral ?? null,
+        cep: d.cep ? String(d.cep).replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2') : null,
+        endereco: logradouro ? [logradouro, d.numero].filter(Boolean).join(', ') : null,
+        bairro: d.bairro || null,
+        cidade: d.municipio || null,
+        uf: d.uf || null,
+        telefone,
+        email: d.email ? String(d.email).toLowerCase() : null,
+      }
+    } catch {
+      // tenta a próxima fonte
+    }
+  }
+  throw new Error('Não foi possível consultar o CNPJ agora. Preencha os dados manualmente.')
 }

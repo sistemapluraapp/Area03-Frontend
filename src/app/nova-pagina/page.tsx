@@ -11,6 +11,7 @@ import { CampoWhatsapp } from '@/components/editor/AbaContato'
 import { apiPaginas, cnpjValido, consultarCnpj, formatarCnpj, formatarTelefone, type DadosCnpj, type OpcaoCatalogo } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
 import { useTituloPagina } from '@/lib/useTituloPagina'
+import CheckboxTermos from '@/components/CheckboxTermos'
 
 export default function NovaPaginaPage() {
   useTituloPagina('Nova página institucional')
@@ -23,6 +24,8 @@ export default function NovaPaginaPage() {
   const [categorias, setCategorias] = useState<OpcaoCatalogo[]>([])
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [aceite, setAceite] = useState(false)
+  const [erroTermos, setErroTermos] = useState('')
   const [dadosCnpj, setDadosCnpj] = useState<DadosCnpj | null>(null)
   const [consultaCnpj, setConsultaCnpj] = useState<'' | 'buscando' | 'nao_encontrado' | 'falhou'>('')
 
@@ -67,11 +70,13 @@ export default function NovaPaginaPage() {
     setErro('')
     if (!nome.trim()) return setErro('Informe o nome do empreendimento.')
     if (!cnpjOk) return setErro('Informe um CNPJ válido.')
+    if (!aceite) return setErroTermos('Para criar a página, aceite os termos e condições')
     setSalvando(true)
     try {
       const pagina = await apiPaginas.criar({
         nome: nome.trim(),
         cnpj,
+        aceite_termos: true,
         whatsapp: whatsapp || undefined,
         categoria: categoria || undefined,
         descricao_curta: descricaoCurta.trim() || undefined,
@@ -134,6 +139,16 @@ export default function NovaPaginaPage() {
           </Secao>
 
           <CampoWhatsapp valor={whatsapp} onChange={setWhatsapp} />
+
+          <CheckboxTermos
+            chave="termos_pagina_gov"
+            aceito={aceite}
+            onChange={(v) => {
+              setAceite(v)
+              setErroTermos('')
+            }}
+            erro={erroTermos}
+          />
 
           {erro && <Aviso tipo="erro">{erro}</Aviso>}
           <button type="submit" disabled={salvando} style={{ alignSelf: 'flex-end', padding: '0.75rem 1.5rem', borderRadius: '0.875rem', border: 'none', background: 'linear-gradient(135deg,#1a7aff,#0062e6)', color: '#fff', fontWeight: 700, fontSize: '1rem', fontFamily: 'inherit', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>

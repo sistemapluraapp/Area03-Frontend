@@ -13,6 +13,7 @@ import { api } from '@/lib/api'
 import { salvarSessao } from '@/lib/auth'
 import { LOGO_DATA_URI } from '@/lib/logo'
 import { useTituloPagina } from '@/lib/useTituloPagina'
+import CheckboxTermos from '@/components/CheckboxTermos'
 
 function ConviteConteudo() {
   const router = useRouter()
@@ -30,6 +31,8 @@ function ConviteConteudo() {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [loading, setLoading] = useState(false)
+  const [aceite, setAceite] = useState(false)
+  const [erroTermos, setErroTermos] = useState('')
 
   useEffect(() => {
     if (!token) {
@@ -50,10 +53,14 @@ function ConviteConteudo() {
       setErro('Preencha todos os campos (senha com ao menos 6 caracteres)')
       return
     }
+    if (!aceite) {
+      setErroTermos('Para criar a conta, aceite os termos e condições')
+      return
+    }
     setLoading(true)
     setErro('')
     try {
-      const resposta = await api.signup({ token, nome: nome.trim(), orgao: orgao.trim(), email: email.trim(), password: senha })
+      const resposta = await api.signup({ token, nome: nome.trim(), orgao: orgao.trim(), email: email.trim(), password: senha, aceite_termos: aceite })
       if ('pending_email_confirmation' in resposta) {
         setSucesso('Conta criada! Verifique seu e-mail para confirmar antes de fazer login.')
         return
@@ -114,6 +121,15 @@ function ConviteConteudo() {
                 <Input label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} leadingIcon={<EmailIcon />} />
                 <Input label="Senha" type="password" placeholder="Mínimo 6 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} leadingIcon={<LockIcon />} />
               </div>
+              <CheckboxTermos
+                chave="termos_gov"
+                aceito={aceite}
+                onChange={(v) => {
+                  setAceite(v)
+                  setErroTermos('')
+                }}
+                erro={erroTermos}
+              />
               <Button type="submit" size="lg" loading={loading} style={{ width: '100%', marginTop: '1.5rem' }}>
                 Criar conta
               </Button>

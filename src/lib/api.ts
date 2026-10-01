@@ -142,7 +142,7 @@ export const api = {
 
   validarConvite: (token: string) => request<{ cidade: string }>(`/convites/${encodeURIComponent(token)}`),
 
-  signup: (body: { token: string; nome: string; orgao: string; email: string; password: string }) =>
+  signup: (body: { token: string; nome: string; orgao: string; email: string; password: string; aceite_termos: boolean }) =>
     request<AuthResponse | { message: string; pending_email_confirmation: true }>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(body),

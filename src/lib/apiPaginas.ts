@@ -180,7 +180,7 @@ export const apiPaginas = {
 
   minhas: () => request<{ paginas: { papel: string; paginas: PaginaCompleta }[] }>('/minhas-paginas'),
 
-  criar: (body: CamposEditaveis & { nome: string; cnpj: string }) =>
+  criar: (body: CamposEditaveis & { nome: string; cnpj: string; aceite_termos: true }) =>
     request<PaginaCompleta>('/paginas', { method: 'POST', body: JSON.stringify(body) }),
 
   obter: (id: string) => request<PaginaDetalhe>(`/paginas/${id}`),

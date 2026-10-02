@@ -50,6 +50,7 @@ export interface PaginaCompleta {
   instagram: string | null
   website: string | null
   video_apresentacao: string | null
+  pais: string
   cep: string | null
   endereco: string | null
   cidade: string | null

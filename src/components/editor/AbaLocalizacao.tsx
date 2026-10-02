@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Aviso, Campo, Grade, Secao, Texto } from './Campos'
+import { Aviso, Campo, Grade, Secao, Texto, estiloCampo } from './Campos'
 import type { PropsAba } from './tipos'
 import EditorRico from '../EditorRico'
+import SeletorLocalidade from '../SeletorLocalidade'
+import { buscarLocalidade } from '@/lib/localidades'
 
 function formatarCep(valor: string) {
   const d = valor.replace(/\D/g, '').slice(0, 8)
@@ -33,17 +35,17 @@ export default function AbaLocalizacao({ rascunho: p, alterar }: PropsAba) {
   return (
     <>
       <Secao titulo="Endereço" descricao="Usado no mapa “Como chegar” e para calcular a distância até o visitante.">
-        <Grade colunas={3}>
-          <Campo rotulo="CEP" ajuda={buscandoCep ? 'Buscando endereço…' : undefined}>
+        <SeletorLocalidade
+          valor={{ pais: p.pais || 'BR', uf: p.uf, cidade: p.cidade }}
+          onChange={(l) => alterar({ pais: l.pais, uf: l.uf, cidade: l.cidade })}
+          buscar={buscarLocalidade}
+          estiloCampo={estiloCampo}
+        />
+        {(p.pais || 'BR') === 'BR' && (
+          <Campo rotulo="CEP" ajuda={buscandoCep ? 'Buscando endereço…' : 'Preenche rua, bairro, cidade e estado automaticamente.'}>
             <Texto valor={p.cep} onChange={aoMudarCep} placeholder="00000-000" inputMode="numeric" />
           </Campo>
-          <Campo rotulo="Cidade">
-            <Texto valor={p.cidade} onChange={(v) => alterar({ cidade: v })} />
-          </Campo>
-          <Campo rotulo="UF">
-            <Texto valor={p.uf} onChange={(v) => alterar({ uf: v.toUpperCase().slice(0, 2) })} max={2} />
-          </Campo>
-        </Grade>
+        )}
         <Grade>
           <Campo rotulo="Endereço (rua e número)">
             <Texto valor={p.endereco} onChange={(v) => alterar({ endereco: v })} placeholder="Av. Beira Mar, 1234" />

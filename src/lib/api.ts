@@ -140,7 +140,7 @@ export const api = {
   reenviarConfirmacao: (email: string) =>
     request<{ message: string }>('/auth/reenviar-confirmacao', { method: 'POST', body: JSON.stringify({ email }) }),
 
-  validarConvite: (token: string) => request<{ cidade: string }>(`/convites/${encodeURIComponent(token)}`),
+  validarConvite: (token: string) => request<{ cidade: string; uf: string | null; pais: string; descricao: string | null }>(`/convites/${encodeURIComponent(token)}`),
 
   signup: (body: { token: string; nome: string; orgao: string; email: string; password: string; aceite_termos: boolean }) =>
     request<AuthResponse | { message: string; pending_email_confirmation: true }>('/auth/signup', {

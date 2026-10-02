@@ -44,7 +44,7 @@ const ABAS: { id: string; rotulo: string; Componente: ComponentType<PropsAba> }[
 // Campos do rascunho que são salvos pelo botão "Salvar alterações"
 const CAMPOS_RASCUNHO: (keyof CamposEditaveis)[] = [
   'nome', 'subtitulo', 'descricao_curta', 'descricao', 'slogan', 'diferencial', 'categoria', 'faixa_preco', 'tags', 'tema', 'cnpj',
-  'whatsapp', 'instagram', 'website', 'video_apresentacao', 'cep', 'endereco', 'cidade', 'uf', 'complemento', 'ponto_referencia',
+  'whatsapp', 'instagram', 'website', 'video_apresentacao', 'pais', 'cep', 'endereco', 'cidade', 'uf', 'complemento', 'ponto_referencia',
   'como_chegar_carro', 'como_chegar_transporte', 'rota_acessivel', 'horarios', 'feriados', 'requer_agendamento', 'tempo_medio',
   'antecedencia', 'recursos_acessibilidade', 'destaques_acessibilidade', 'observacoes_recursos', 'antes_de_ir',
   'antes_de_ir_observacoes', 'seguranca', 'como_e_o_lugar', 'video_libras',

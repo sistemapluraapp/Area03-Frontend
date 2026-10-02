@@ -14,6 +14,7 @@ import { salvarSessao } from '@/lib/auth'
 import { LOGO_DATA_URI } from '@/lib/logo'
 import { useTituloPagina } from '@/lib/useTituloPagina'
 import CheckboxTermos from '@/components/CheckboxTermos'
+import { nomePais } from '@/lib/localidades'
 
 function ConviteConteudo() {
   const router = useRouter()
@@ -22,6 +23,7 @@ function ConviteConteudo() {
 
   const [validando, setValidando] = useState(true)
   const [cidade, setCidade] = useState<string | null>(null)
+  const [descricaoConvite, setDescricaoConvite] = useState<string | null>(null)
   const [erroConvite, setErroConvite] = useState('')
 
   const [nome, setNome] = useState('')
@@ -42,7 +44,10 @@ function ConviteConteudo() {
     }
     api
       .validarConvite(token)
-      .then(({ cidade }) => setCidade(cidade))
+      .then((c) => {
+        setCidade([c.cidade, c.uf, c.pais && c.pais !== 'BR' ? nomePais(c.pais) : null].filter(Boolean).join(' · '))
+        setDescricaoConvite(c.descricao)
+      })
       .catch((e) => setErroConvite(e instanceof Error ? e.message : 'Link inválido ou expirado'))
       .finally(() => setValidando(false))
   }, [token])
@@ -104,8 +109,9 @@ function ConviteConteudo() {
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <h1 style={{ fontSize: '1.375rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.375rem' }}>Criar conta institucional</h1>
               <p style={{ fontSize: '0.9375rem', color: 'var(--c-text-2)' }}>
-                Cidade: <strong style={{ color: 'var(--c-text-1)' }}>{cidade}</strong>
+                Local: <strong style={{ color: 'var(--c-text-1)' }}>{cidade}</strong>
               </p>
+              {descricaoConvite && <p style={{ fontSize: '0.875rem', color: 'var(--c-text-2)', marginTop: '0.5rem' }}>{descricaoConvite}</p>}
             </div>
 
             {erro && (

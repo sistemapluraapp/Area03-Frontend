@@ -15,6 +15,7 @@ import AbaLocalizacao from '@/components/editor/AbaLocalizacao'
 import AbaHorarios from '@/components/editor/AbaHorarios'
 import AbaGaleria from '@/components/editor/AbaGaleria'
 import AbaExperiencias from '@/components/editor/AbaExperiencias'
+import AbaEventos from '@/components/editor/AbaEventos'
 import AbaContato from '@/components/editor/AbaContato'
 import AbaAntesDeIr from '@/components/editor/AbaAntesDeIr'
 import AbaComentarios from '@/components/editor/AbaComentarios'
@@ -34,6 +35,7 @@ const ABAS: { id: string; rotulo: string; Componente: ComponentType<PropsAba> }[
   { id: 'horarios', rotulo: 'Horários', Componente: AbaHorarios },
   { id: 'galeria', rotulo: 'Galeria', Componente: AbaGaleria },
   { id: 'experiencias', rotulo: 'Experiências', Componente: AbaExperiencias },
+  { id: 'eventos', rotulo: 'Eventos', Componente: AbaEventos },
   { id: 'contato', rotulo: 'Contato', Componente: AbaContato },
   { id: 'antes', rotulo: 'Antes de ir e segurança', Componente: AbaAntesDeIr },
   { id: 'comentarios', rotulo: 'Comentários', Componente: AbaComentarios },

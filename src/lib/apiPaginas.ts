@@ -176,6 +176,37 @@ export type CamposEditaveis = Partial<Omit<PaginaCompleta, 'id' | 'tipo' | 'lega
 
 const imagem = (imagemBase64: string, extensao: string) => JSON.stringify({ imagem_base64: imagemBase64, extensao })
 
+export interface Evento {
+  id: string
+  pagina_id: string
+  titulo: string
+  descricao: string | null
+  imagem_url: string | null
+  link: string | null
+  inicio: string
+  fim: string | null
+  local_nome: string | null
+  endereco: string | null
+  pais: string
+  uf: string | null
+  cidade: string | null
+  gratuito: boolean | null
+  acessibilidades: string[]
+  publicado: boolean
+  total_interessados: number
+  criado_em: string
+  atualizado_em: string
+}
+
+export type EventoEditavel = Partial<Omit<Evento, 'id' | 'pagina_id' | 'imagem_url' | 'total_interessados' | 'criado_em' | 'atualizado_em'>>
+
+export interface Interessado {
+  nome: string
+  cidade: string | null
+  uf: string | null
+  criado_em: string
+}
+
 export const apiPaginas = {
   opcoes: () => request<Opcoes>('/opcoes'),
 
@@ -222,6 +253,20 @@ export const apiPaginas = {
 
   uploadImagemExperiencia: (id: string, experienciaId: string, base64: string, extensao: string) =>
     request<{ imagem_url: string }>(`/paginas/${id}/experiencias/${experienciaId}/imagem`, { method: 'POST', body: imagem(base64, extensao) }),
+
+  listarEventos: (id: string) => request<{ eventos: Evento[] }>(`/paginas/${id}/eventos`),
+
+  criarEvento: (id: string, body: EventoEditavel) => request<Evento>(`/paginas/${id}/eventos`, { method: 'POST', body: JSON.stringify(body) }),
+
+  atualizarEvento: (id: string, eventoId: string, body: EventoEditavel) =>
+    request<Evento>(`/paginas/${id}/eventos/${eventoId}`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  removerEvento: (id: string, eventoId: string) => request<void>(`/paginas/${id}/eventos/${eventoId}`, { method: 'DELETE' }),
+
+  uploadImagemEvento: (id: string, eventoId: string, base64: string, extensao: string) =>
+    request<{ imagem_url: string }>(`/paginas/${id}/eventos/${eventoId}/imagem`, { method: 'POST', body: imagem(base64, extensao) }),
+
+  interessadosEvento: (id: string, eventoId: string) => request<{ interessados: Interessado[] }>(`/paginas/${id}/eventos/${eventoId}/interessados`),
 }
 
 // Máscaras e validação usadas nos formulários

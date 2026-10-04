@@ -15,6 +15,8 @@ import { destinoSeguro } from '@/lib/destino'
 import { LOGO_DATA_URI } from '@/lib/logo'
 import { useTituloPagina } from '@/lib/useTituloPagina'
 
+const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://plura.app.br'
+
 export default function LoginPage() {
   useTituloPagina('Acesso institucional')
   const router = useRouter()
@@ -23,6 +25,8 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+  // Atalhos quando a conta é de outra área ou ainda não existe
+  const [atalhos, setAtalhos] = useState<{ texto: string; link: string }[]>([])
   const [suspensa, setSuspensa] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -35,6 +39,7 @@ export default function LoginPage() {
     setLoading(true)
     setErro('')
     setSuspensa(false)
+    setAtalhos([])
     try {
       const auth = await api.login({ email: email.trim(), password })
       salvarSessao(auth)
@@ -43,8 +48,18 @@ export default function LoginPage() {
       if (err instanceof ApiError && err.suspensa) {
         setSuspensa(true)
         setErro(err.message)
+      } else if (err instanceof ApiError && err.codigo === 'sem_paginas_gov') {
+        setErro(err.message)
+        setAtalhos([
+          { texto: 'Ir para Plura para empresas', link: err.link ?? 'https://login.plura.app.br' },
+          { texto: 'Ir para a busca da Plura', link: AREA01_URL },
+        ])
       } else {
-        setErro('E-mail ou senha incorretos')
+        setErro('E-mail ou senha incorretos.')
+        setAtalhos([
+          { texto: 'Esqueci minha senha', link: '/esqueci-senha' },
+          { texto: 'Criar conta Plura (usuário)', link: `${AREA01_URL}/signup` },
+        ])
       }
     } finally {
       setLoading(false)
@@ -76,6 +91,15 @@ export default function LoginPage() {
           {erro && !suspensa && (
             <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'var(--c-danger-soft)', border: '1px solid var(--c-danger-border)', fontSize: '0.875rem', color: 'var(--c-danger-text)', textAlign: 'center' }}>
               {erro}
+              {atalhos.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem', marginTop: '0.625rem' }}>
+                  {atalhos.map((a) => (
+                    <a key={a.link} href={a.link} style={{ padding: '0.35rem 0.75rem', borderRadius: '9999px', border: '1px solid var(--c-danger-border)', color: 'inherit', fontWeight: 700, textDecoration: 'none', fontSize: '0.8125rem' }}>
+                      {a.texto}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -116,7 +140,8 @@ export default function LoginPage() {
           </form>
 
           <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--c-text-3)', marginTop: '1.5rem' }}>
-            Cadastro de novas contas institucionais é feito apenas por link de convite enviado pela administração da Plura.
+            Contas institucionais são criadas por convite da administração da Plura. Se você tem conta Plura e foi
+            adicionado à equipe de uma página Gov, entre com o mesmo e-mail e senha.
           </p>
         </GlassCard>
         <Footer />

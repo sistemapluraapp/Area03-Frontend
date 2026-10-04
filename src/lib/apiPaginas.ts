@@ -129,13 +129,32 @@ export interface AvaliacaoRecebida {
   created_at: string
 }
 
+// Membro da equipe (GET /paginas/:id/colaboradores e vinculos de GET /paginas/:id)
 export interface VinculoPagina {
   id: string
-  usuario_id: string | null
-  gov_conta_id?: string | null
   papel: 'administrador' | 'colaborador'
+  cargo: string | null
+  permissoes: string[]
+  nome: string
+  email: string
+  tipo_conta: 'usuario' | 'gov'
+  conta_id: string
   created_at: string
-  usuarios?: { nome: string } | null
+  eh_voce: boolean
+}
+
+export interface MeuAcesso {
+  papel: 'administrador' | 'colaborador'
+  cargo: string | null
+  abas: string[]
+}
+
+export interface LogPagina {
+  id: string
+  autor_id: string | null
+  autor_nome: string | null
+  acao: string
+  criado_em: string
 }
 
 export interface CertificadoPagina {
@@ -146,6 +165,7 @@ export interface CertificadoPagina {
 }
 
 export interface PaginaDetalhe extends PaginaCompleta {
+  meu_acesso: MeuAcesso
   vinculos: VinculoPagina[]
   avaliacoes: AvaliacaoRecebida[]
   certificados: CertificadoPagina[]
@@ -210,7 +230,12 @@ export interface Interessado {
 export const apiPaginas = {
   opcoes: () => request<Opcoes>('/opcoes'),
 
-  minhas: () => request<{ paginas: { papel: string; paginas: PaginaCompleta }[] }>('/minhas-paginas'),
+  minhas: () =>
+    request<{
+      paginas: { papel: string; cargo: string | null; paginas: PaginaCompleta }[]
+      outra_area: { nome: string; url: string; total: number }
+      pode_criar: boolean
+    }>('/minhas-paginas'),
 
   criar: (body: CamposEditaveis & { nome: string; cnpj: string; aceite_termos: true }) =>
     request<PaginaCompleta>('/paginas', { method: 'POST', body: JSON.stringify(body) }),
@@ -267,6 +292,19 @@ export const apiPaginas = {
     request<{ imagem_url: string }>(`/paginas/${id}/eventos/${eventoId}/imagem`, { method: 'POST', body: imagem(base64, extensao) }),
 
   interessadosEvento: (id: string, eventoId: string) => request<{ interessados: Interessado[] }>(`/paginas/${id}/eventos/${eventoId}/interessados`),
+
+  // Equipe e logs (aba "Equipe e logs": dono ou quem tem essa permissão)
+  equipe: (id: string) => request<{ equipe: VinculoPagina[]; abas: { id: string; rotulo: string }[] }>(`/paginas/${id}/colaboradores`),
+
+  adicionarMembro: (id: string, body: { email: string; cargo?: string | null; permissoes?: string[] }) =>
+    request<VinculoPagina>(`/paginas/${id}/colaboradores`, { method: 'POST', body: JSON.stringify(body) }),
+
+  atualizarMembro: (id: string, vinculoId: string, body: { cargo?: string | null; permissoes?: string[] }) =>
+    request<VinculoPagina>(`/paginas/${id}/colaboradores/${vinculoId}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  removerMembro: (id: string, vinculoId: string) => request<void>(`/paginas/${id}/colaboradores/${vinculoId}`, { method: 'DELETE' }),
+
+  logs: (id: string) => request<{ logs: LogPagina[] }>(`/paginas/${id}/logs?limite=200`),
 }
 
 // Máscaras e validação usadas nos formulários

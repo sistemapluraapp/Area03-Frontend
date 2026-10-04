@@ -7,6 +7,7 @@ import Grain from '@/components/Grain'
 import Footer from '@/components/Footer'
 import Header from '@/components/GovHeader'
 import { Aviso } from '@/components/editor/Campos'
+import { ApiError } from '@/lib/api'
 import type { PropsAba } from '@/components/editor/tipos'
 import AbaIdentidade from '@/components/editor/AbaIdentidade'
 import AbaAparencia from '@/components/editor/AbaAparencia'
@@ -39,7 +40,7 @@ const ABAS: { id: string; rotulo: string; Componente: ComponentType<PropsAba> }[
   { id: 'contato', rotulo: 'Contato', Componente: AbaContato },
   { id: 'antes', rotulo: 'Antes de ir e segurança', Componente: AbaAntesDeIr },
   { id: 'comentarios', rotulo: 'Comentários', Componente: AbaComentarios },
-  { id: 'equipe', rotulo: 'Equipe', Componente: AbaEquipe },
+  { id: 'equipe', rotulo: 'Equipe e logs', Componente: AbaEquipe },
   { id: 'selos', rotulo: 'Selos e certificações', Componente: AbaSelos },
 ]
 
@@ -71,9 +72,13 @@ function Editor() {
   const [rascunho, setRascunho] = useState<PaginaDetalhe | null>(null)
   const [opcoes, setOpcoes] = useState<Opcoes | null>(null)
   const [erro, setErro] = useState('')
+  const [erroLink, setErroLink] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState('')
-  const rotuloAba = (ABAS.find((a) => a.id === aba) ?? ABAS[0]).rotulo
+  // Colaboradores veem só as abas liberadas pelo dono (o backend também confere)
+  const abasVisiveis = useMemo(() => (salvo?.meu_acesso ? ABAS.filter((a) => salvo.meu_acesso.abas.includes(a.id)) : ABAS), [salvo])
+  const abaAtual = abasVisiveis.find((a) => a.id === aba) ?? abasVisiveis[0] ?? null
+  const rotuloAba = abaAtual?.rotulo ?? 'Editor'
   useTituloPagina(salvo ? `${rotuloAba} — ${salvo.nome}` : 'Editar página')
 
   useEffect(() => {
@@ -88,7 +93,10 @@ function Editor() {
         setRascunho(p)
         setOpcoes(o)
       })
-      .catch((e) => setErro(e instanceof Error ? e.message : 'Página não encontrada ou sem acesso'))
+      .catch((e) => {
+        setErro(e instanceof Error ? e.message : 'Página não encontrada ou sem acesso')
+        if (e instanceof ApiError && e.codigo === 'outra_area' && e.link) setErroLink(e.link)
+      })
   }, [id, router])
 
   const patch = useMemo(() => (salvo && rascunho ? diferencas(salvo, rascunho) : {}), [salvo, rascunho])
@@ -135,10 +143,21 @@ function Editor() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  if (erro && !salvo) return <Aviso tipo="erro">{erro}</Aviso>
+  if (erro && !salvo)
+    return (
+      <Aviso tipo="erro">
+        {erro}{' '}
+        {erroLink ? (
+          <a href={erroLink} style={{ color: 'inherit', fontWeight: 700 }}>Ir para a área certa</a>
+        ) : (
+          <a href="/" style={{ color: 'inherit', fontWeight: 700 }}>Voltar para minhas páginas</a>
+        )}
+      </Aviso>
+    )
   if (!salvo || !rascunho || !opcoes) return <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>
 
-  const Atual = (ABAS.find((a) => a.id === aba) ?? ABAS[0]).Componente
+  const Atual = abaAtual?.Componente ?? null
+  const acesso = salvo.meu_acesso
 
   return (
     <>
@@ -152,6 +171,12 @@ function Editor() {
         </a>
       </div>
 
+      {acesso?.papel === 'colaborador' && (
+        <p style={{ margin: '-0.5rem 0 1rem', fontSize: '0.8125rem', color: 'var(--c-text-3)' }}>
+          Você é colaborador{acesso.cargo ? ` (${acesso.cargo})` : ''} desta página e edita {acesso.abas.length === 1 ? '1 aba' : `${acesso.abas.length} abas`}.
+        </p>
+      )}
+
       {salvo.suspensa && (
         <div style={{ marginBottom: '1rem' }}>
           <Aviso tipo="erro">Esta página está suspensa pela administração da Plura e não aparece nas buscas.</Aviso>
@@ -159,19 +184,19 @@ function Editor() {
       )}
 
       <nav role="tablist" aria-label="Seções do editor" style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.5rem', marginBottom: '1.25rem', scrollbarWidth: 'thin' }}>
-        {ABAS.map((a) => (
+        {abasVisiveis.map((a) => (
           <button
             key={a.id}
             role="tab"
-            aria-selected={aba === a.id}
+            aria-selected={abaAtual?.id === a.id}
             onClick={() => trocarAba(a.id)}
             style={{
               flexShrink: 0,
               padding: '0.5rem 0.95rem',
               borderRadius: '9999px',
-              border: aba === a.id ? '1px solid var(--c-accent-soft-border)' : '1px solid var(--c-divider)',
-              background: aba === a.id ? 'var(--c-accent-soft)' : 'transparent',
-              color: aba === a.id ? 'var(--c-accent-text)' : 'var(--c-text-2)',
+              border: abaAtual?.id === a.id ? '1px solid var(--c-accent-soft-border)' : '1px solid var(--c-divider)',
+              background: abaAtual?.id === a.id ? 'var(--c-accent-soft)' : 'transparent',
+              color: abaAtual?.id === a.id ? 'var(--c-accent-text)' : 'var(--c-text-2)',
               fontWeight: 600,
               fontSize: '0.875rem',
               fontFamily: 'inherit',
@@ -184,7 +209,11 @@ function Editor() {
       </nav>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: alterado ? '6rem' : 0 }}>
-        <Atual rascunho={rascunho} salvo={salvo} alterar={alterar} aplicarSalvo={aplicarSalvo} opcoes={opcoes} />
+        {Atual ? (
+          <Atual rascunho={rascunho} salvo={salvo} alterar={alterar} aplicarSalvo={aplicarSalvo} opcoes={opcoes} />
+        ) : (
+          <Aviso>O dono da página ainda não liberou nenhuma aba para você editar. Peça a ele para marcar as suas permissões em “Equipe e logs”.</Aviso>
+        )}
       </div>
 
       {(alterado || erro || mensagem) && (

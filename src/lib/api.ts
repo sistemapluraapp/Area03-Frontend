@@ -5,11 +5,16 @@ const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ''
 export class ApiError extends Error {
   status?: number
   suspensa?: boolean
+  // Ex.: 'conta_gov', 'sem_paginas_gov', 'sem_conta', 'outra_area', 'sem_permissao'
+  codigo?: string
+  link?: string
 
-  constructor(message: string, options?: { status?: number; suspensa?: boolean }) {
+  constructor(message: string, options?: { status?: number; suspensa?: boolean; codigo?: string; link?: string }) {
     super(message)
     this.status = options?.status
     this.suspensa = options?.suspensa
+    this.codigo = options?.codigo
+    this.link = options?.link
   }
 }
 
@@ -67,6 +72,8 @@ export async function request<T>(path: string, options: RequestInit = {}, isRetr
     throw new ApiError(data?.error ?? 'Erro inesperado ao falar com o servidor', {
       status: res.status,
       suspensa: data?.suspensa === true,
+      codigo: data?.codigo,
+      link: data?.link,
     })
   }
   return data as T
@@ -159,11 +166,7 @@ export const api = {
   obterPagina: (id: string) =>
     request<Pagina & { vinculos: Vinculo[]; avaliacoes: Avaliacao[]; certificados: Certificado[] }>(`/paginas/${id}`),
 
-  convidarColaborador: (paginaId: string, email: string) =>
-    request<Vinculo>(`/paginas/${paginaId}/colaboradores`, { method: 'POST', body: JSON.stringify({ email }) }),
 
-  removerColaborador: (paginaId: string, vinculoId: string) =>
-    request<void>(`/paginas/${paginaId}/colaboradores/${vinculoId}`, { method: 'DELETE' }),
 
   responderAvaliacao: (avaliacaoId: string, resposta: string) =>
     request<Avaliacao>(`/avaliacoes/${avaliacaoId}/resposta`, { method: 'PATCH', body: JSON.stringify({ resposta }) }),

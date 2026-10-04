@@ -123,7 +123,7 @@ export default function AbaIdentidade({ rascunho: p, salvo, alterar, aplicarSalv
         )}
       </Secao>
 
-      <ApagarPagina id={salvo.id} nome={salvo.nome} />
+      {salvo.meu_acesso?.papel !== 'colaborador' && <ApagarPagina id={salvo.id} nome={salvo.nome} />}
 
       {enviando && (
         <EnviarImagemModal

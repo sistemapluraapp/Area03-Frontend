@@ -11,12 +11,16 @@ import { apiPaginas, diasRestantesLixeira, type PaginaCompleta } from '@/lib/api
 import { estaLogado } from '@/lib/auth'
 import { useTituloPagina } from '@/lib/useTituloPagina'
 
-const PAPEL: Record<string, string> = { administrador: 'Administrador', colaborador: 'Colaborador' }
+const PAPEL: Record<string, string> = { administrador: 'Dono', colaborador: 'Colaborador' }
+const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://plura.app.br'
+const atalho = { padding: '0.45rem 0.875rem', borderRadius: '9999px', border: '1px solid var(--c-input-border)', color: 'var(--c-text-1)', fontWeight: 600, fontSize: '0.8125rem', textDecoration: 'none' } as const
 
 export default function MinhasPaginasPage() {
   useTituloPagina('Minhas páginas')
   const router = useRouter()
-  const [itens, setItens] = useState<{ papel: string; paginas: PaginaCompleta }[]>([])
+  const [itens, setItens] = useState<{ papel: string; cargo?: string | null; paginas: PaginaCompleta }[]>([])
+  const [outraArea, setOutraArea] = useState<{ nome: string; url: string; total: number } | null>(null)
+  const [podeCriar, setPodeCriar] = useState(true)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
@@ -29,7 +33,11 @@ export default function MinhasPaginasPage() {
     }
     apiPaginas
       .minhas()
-      .then(({ paginas }) => setItens(paginas.filter((i) => i.paginas)))
+      .then(({ paginas, outra_area, pode_criar }) => {
+        setItens(paginas.filter((i) => i.paginas))
+        setOutraArea(outra_area ?? null)
+        setPodeCriar(pode_criar !== false)
+      })
       .catch((e) => setErro(e instanceof Error ? e.message : 'Erro ao carregar páginas'))
       .finally(() => setCarregando(false))
     if (new URLSearchParams(window.location.search).get('apagada')) {
@@ -68,7 +76,7 @@ export default function MinhasPaginasPage() {
       <main id="conteudo" tabIndex={-1} style={{ maxWidth: '1040px', margin: '0 auto', padding: '2rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Minhas páginas</h1>
-          {botaoNova}
+          {podeCriar && botaoNova}
         </div>
 
         {erro && <Aviso tipo="erro">{erro}</Aviso>}
@@ -83,11 +91,19 @@ export default function MinhasPaginasPage() {
             </div>
             <p style={{ fontSize: '1.0625rem', fontWeight: 600, marginBottom: '0.25rem' }}>Você ainda não tem nenhuma página institucional</p>
             <p style={{ fontSize: '0.9rem', color: 'var(--c-text-2)', marginBottom: '1.25rem' }}>Crie a página institucional do seu órgão ou atrativo para começar.</p>
-            {botaoNova}
+            {podeCriar && botaoNova}
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+              {outraArea && outraArea.total > 0 && (
+                <a href={outraArea.url} style={atalho}>
+                  Você tem {outraArea.total === 1 ? '1 página' : `${outraArea.total} páginas`} em {outraArea.nome}: abrir
+                </a>
+              )}
+              <a href={AREA01_URL} style={atalho}>Ir para a busca da Plura</a>
+            </div>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-            {ativas.map(({ papel, paginas: p }) => (
+            {ativas.map(({ papel, cargo, paginas: p }) => (
               <button
                 key={p.id}
                 type="button"
@@ -102,6 +118,7 @@ export default function MinhasPaginasPage() {
                 <div style={{ padding: '1.75rem 1rem 1rem' }}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', color: 'var(--c-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     {PAPEL[papel] ?? papel}
+                    {cargo && ` · ${cargo}`}
                     {p.suspensa && ' · suspensa'}
                     {p.legado && !p.cnpj && ' · falta CNPJ'}
                   </span>

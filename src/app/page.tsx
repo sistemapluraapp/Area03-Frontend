@@ -10,6 +10,7 @@ import { Aviso } from '@/components/editor/Campos'
 import { apiPaginas, diasRestantesLixeira, type PaginaCompleta } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
 import { useTituloPagina } from '@/lib/useTituloPagina'
+import Carregando from '@/components/Carregando'
 
 const PAPEL: Record<string, string> = { administrador: 'Dono', colaborador: 'Colaborador' }
 const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://plura.app.br'
@@ -83,7 +84,7 @@ export default function MinhasPaginasPage() {
         {mensagem && <Aviso tipo="sucesso">{mensagem}</Aviso>}
 
         {carregando ? (
-          <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>
+          <Carregando />
         ) : ativas.length === 0 && lixeira.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem 1.5rem', borderRadius: '1.25rem', border: 'var(--c-border)', background: 'var(--c-glass-bg)' }}>
             <div style={{ color: 'var(--c-text-3)', marginBottom: '0.75rem', display: 'flex', justifyContent: 'center' }}>

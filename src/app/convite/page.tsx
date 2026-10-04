@@ -15,6 +15,7 @@ import { LOGO_DATA_URI } from '@/lib/logo'
 import { useTituloPagina } from '@/lib/useTituloPagina'
 import CheckboxTermos from '@/components/CheckboxTermos'
 import { nomePais } from '@/lib/localidades'
+import Carregando from '@/components/Carregando'
 
 function ConviteConteudo() {
   const router = useRouter()
@@ -154,7 +155,7 @@ export default function ConvitePage() {
     <>
       <Grain />
       <AcessoRapido />
-      <Suspense fallback={<p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)', textAlign: 'center', paddingTop: '4rem' }}>carregando…</p>}>
+      <Suspense fallback={<Carregando />}>
         <ConviteConteudo />
       </Suspense>
     </>

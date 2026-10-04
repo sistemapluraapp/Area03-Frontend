@@ -9,6 +9,7 @@ import { buscarLocalidade } from '@/lib/localidades'
 import type { PropsAba } from './tipos'
 import EditorRico from '../EditorRico'
 import SeletorLocalidade from '../SeletorLocalidade'
+import Carregando from '@/components/Carregando'
 
 // ISO (UTC) -> valor de <input type="datetime-local"> no horário do navegador
 function paraCampoData(iso: string | null | undefined): string {
@@ -176,7 +177,7 @@ function Interessados({ paginaId, evento }: { paginaId: string; evento: Evento }
   }
 
   if (erro) return <Aviso tipo="erro">{erro}</Aviso>
-  if (!lista) return <p style={{ fontSize: '0.875rem', color: 'var(--c-text-3)' }}>Carregando…</p>
+  if (!lista) return <Carregando compacto />
   if (lista.length === 0) return <p style={{ fontSize: '0.875rem', color: 'var(--c-text-3)' }}>Ninguém marcou interesse ainda.</p>
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

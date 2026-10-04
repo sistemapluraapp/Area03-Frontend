@@ -115,6 +115,7 @@ export interface Certificado {
 
 export interface AuthResponse {
   user?: { id: string; email: string }
+  conta?: 'gov' | 'usuario'
   gov_conta?: { id: string; nome: string; orgao: string; cidade: string; nivel_acesso: number }
   access_token: string
   refresh_token: string

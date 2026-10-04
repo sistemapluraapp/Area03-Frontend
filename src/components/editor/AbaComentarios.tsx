@@ -17,7 +17,7 @@ export default function AbaComentarios({ rascunho: p }: PropsAba) {
 
   return (
     <Secao
-      titulo={`Comentários recebidos (${avaliacoes.length})`}
+      titulo={`Avaliações de nossos usuários (${avaliacoes.length})`}
       descricao={media !== null ? `Nota média dos comentários publicados: ${media.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} / 5` : undefined}
     >
       <Aviso>Todo comentário passa pela moderação da Plura antes de aparecer na sua página.</Aviso>

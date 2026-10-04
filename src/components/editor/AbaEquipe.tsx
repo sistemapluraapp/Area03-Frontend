@@ -6,6 +6,7 @@ import { Aviso, Campo, Grade, Secao, Selecao, Texto } from './Campos'
 import { ApiError } from '@/lib/api'
 import { apiPaginas, type LogPagina, type VinculoPagina } from '@/lib/apiPaginas'
 import type { PropsAba } from './tipos'
+import Carregando from '@/components/Carregando'
 
 const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://plura.app.br'
 
@@ -257,7 +258,7 @@ export default function AbaEquipe({ salvo }: PropsAba) {
 
       <Secao titulo="Logs da página" descricao="Histórico das alterações feitas pela equipe (mais recentes primeiro).">
         {logs === null ? (
-          <p style={{ margin: 0, fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>
+          <Carregando compacto />
         ) : logs.length === 0 ? (
           <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--c-text-2)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <IconHistory size={18} aria-hidden /> Nenhuma alteração registrada ainda.

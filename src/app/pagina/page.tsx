@@ -25,6 +25,7 @@ import AbaSelos from '@/components/editor/AbaSelos'
 import { apiPaginas, type CamposEditaveis, type Opcoes, type PaginaDetalhe } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
 import { useTituloPagina } from '@/lib/useTituloPagina'
+import Carregando from '@/components/Carregando'
 
 const AREA01_URL = process.env.NEXT_PUBLIC_AREA01_URL ?? 'https://plura.app.br'
 
@@ -39,7 +40,7 @@ const ABAS: { id: string; rotulo: string; Componente: ComponentType<PropsAba> }[
   { id: 'eventos', rotulo: 'Eventos', Componente: AbaEventos },
   { id: 'contato', rotulo: 'Contato', Componente: AbaContato },
   { id: 'antes', rotulo: 'Antes de ir e segurança', Componente: AbaAntesDeIr },
-  { id: 'comentarios', rotulo: 'Comentários', Componente: AbaComentarios },
+  { id: 'comentarios', rotulo: 'Avaliações', Componente: AbaComentarios },
   { id: 'equipe', rotulo: 'Equipe e logs', Componente: AbaEquipe },
   { id: 'selos', rotulo: 'Selos e certificações', Componente: AbaSelos },
 ]
@@ -154,7 +155,7 @@ function Editor() {
         )}
       </Aviso>
     )
-  if (!salvo || !rascunho || !opcoes) return <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>
+  if (!salvo || !rascunho || !opcoes) return <Carregando />
 
   const Atual = abaAtual?.Componente ?? null
   const acesso = salvo.meu_acesso
@@ -245,7 +246,7 @@ export default function EditorPaginaPage() {
       <Grain />
       <Header />
       <main id="conteudo" tabIndex={-1} style={{ maxWidth: '980px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
-        <Suspense fallback={<p style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-text-3)' }}>carregando…</p>}>
+        <Suspense fallback={<Carregando />}>
           <Editor />
         </Suspense>
       </main>

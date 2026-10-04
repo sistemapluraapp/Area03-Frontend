@@ -106,6 +106,9 @@ export default function LoginPage() {
                   </button>
                 }
               />
+              <div style={{ textAlign: 'right', marginTop: '-0.25rem' }}>
+                <a href="/esqueci-senha" style={{ color: 'var(--c-text-blue)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none' }}>Esqueci minha senha</a>
+              </div>
               <Button type="submit" size="lg" loading={loading} style={{ width: '100%' }}>
                 {loading ? 'Entrando…' : 'Entrar'}
               </Button>

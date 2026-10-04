@@ -15,7 +15,7 @@ export class ApiError extends Error {
 
 function redirecionarParaLoginAposFalhaDeRenovacao() {
   if (typeof window === 'undefined') return
-  const rotasPublicas = ['/login', '/signup', '/convite']
+  const rotasPublicas = ['/login', '/signup', '/convite', '/esqueci-senha', '/redefinir-senha']
   if (rotasPublicas.some((rota) => window.location.pathname.startsWith(rota))) return
   window.location.href = '/login'
 }

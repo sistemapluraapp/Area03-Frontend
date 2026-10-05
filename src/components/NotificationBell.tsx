@@ -6,6 +6,7 @@ import Button from '@/components/Button'
 import { BellIcon } from '@/components/icons'
 import { api, type Notificacao } from '@/lib/api'
 import Carregando from '@/components/Carregando'
+import { destinoNotificacao } from '@/lib/destinoNotificacao'
 
 const POLL_MS = 60_000
 
@@ -51,6 +52,15 @@ export default function NotificationBell({ rotulo }: { rotulo?: string } = {}) {
         .catch(() => {})
         .finally(() => setCarregando(false))
     }
+  }
+
+  function clicar(n: Notificacao) {
+    if (!n.lida) marcarComoLida(n.id)
+    const destino = destinoNotificacao(n)
+    if (!destino) return
+    setAberto(false)
+    if (destino.startsWith('/#') && window.location.pathname === '/') window.location.hash = destino.slice(1)
+    else window.location.href = destino
   }
 
   async function marcarComoLida(id: string) {
@@ -156,13 +166,13 @@ export default function NotificationBell({ rotulo }: { rotulo?: string } = {}) {
               {notificacoes.map((n) => (
                 <div
                   key={n.id}
-                  onClick={() => !n.lida && marcarComoLida(n.id)}
+                  onClick={() => clicar(n)}
                   style={{
                     padding: '0.65rem 0.75rem',
                     borderRadius: 'var(--radius-md)',
                     background: n.lida ? 'var(--c-glass-bg-sm)' : 'var(--c-glass-bg-blue)',
                     border: n.lida ? 'var(--c-border-sm)' : 'var(--c-border-blue)',
-                    cursor: n.lida ? 'default' : 'pointer',
+                    cursor: n.lida && !destinoNotificacao(n) ? 'default' : 'pointer',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

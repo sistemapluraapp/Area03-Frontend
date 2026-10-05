@@ -16,6 +16,8 @@ const QUEM_PODE_ENTRAR = 'Contas Gov ou qualquer pessoa com conta Plura (usuári
 const botaoPrimario = { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.125rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg,#1a7aff,#0062e6)', color: '#fff', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer' } as const
 const etiqueta = { fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '0.15rem 0.5rem', borderRadius: '9999px', border: '1px solid var(--c-divider)', color: 'var(--c-text-2)' } as const
 
+const expirado = (m: VinculoPagina) => m.status === 'pendente' && !!m.expira_em && new Date(m.expira_em) <= new Date()
+
 function dataHora(iso: string) {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
@@ -80,7 +82,7 @@ export default function AbaEquipe({ salvo }: PropsAba) {
       setCargoNovo('')
       await carregar()
       setSelecionado(novo.id)
-      setMensagem(`${novo.nome ?? 'A pessoa'} entrou na equipe. Agora marque abaixo as abas que ela pode editar.`)
+      setMensagem(`Convite enviado para ${novo.email ?? 'a pessoa'}. Ela recebe um aviso e um e-mail para aceitar ou recusar; só depois de aceitar passa a editar. Você já pode marcar abaixo as abas que ela poderá editar.`)
     } catch (err) {
       setSemConta(err instanceof ApiError && err.codigo === 'sem_conta')
       setErro(err instanceof Error ? err.message : 'Erro ao adicionar pessoa')
@@ -89,15 +91,28 @@ export default function AbaEquipe({ salvo }: PropsAba) {
     }
   }
 
+  async function reenviar(m: VinculoPagina) {
+    setErro('')
+    setMensagem('')
+    try {
+      await apiPaginas.reenviarConvite(paginaId, m.id)
+      await carregar()
+      setMensagem(`Convite reenviado para ${m.email}. Ele vale por mais 14 dias.`)
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Erro ao reenviar')
+    }
+  }
+
   async function remover(m: VinculoPagina) {
-    if (!confirm(`Remover ${m.nome} da equipe? Ela deixa de poder editar esta página.`)) return
+    const pendente = m.status === 'pendente'
+    if (!confirm(pendente ? `Cancelar o convite de ${m.email}?` : `Remover ${m.nome} da equipe? Ela deixa de poder editar esta página.`)) return
     setErro('')
     setMensagem('')
     try {
       await apiPaginas.removerMembro(paginaId, m.id)
       if (selecionado === m.id) setSelecionado('')
       await carregar()
-      setMensagem(`${m.nome} saiu da equipe.`)
+      setMensagem(pendente ? `Convite de ${m.email} cancelado.` : `${m.nome} saiu da equipe.`)
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Erro ao remover')
     }
@@ -152,19 +167,34 @@ export default function AbaEquipe({ salvo }: PropsAba) {
                     {m.papel === 'administrador' ? 'Dono' : 'Colaborador'}
                   </span>
                   {m.tipo_conta === 'gov' && <span style={etiqueta}>conta Gov</span>}
+                  {m.status === 'pendente' && (
+                    <span style={{ ...etiqueta, color: expirado(m) ? 'var(--c-danger-text)' : 'var(--c-caution-text, #b45309)', borderColor: 'currentColor' }}>
+                      {expirado(m) ? 'convite expirado' : 'convite pendente'}
+                    </span>
+                  )}
                 </div>
                 <p style={{ margin: '0.15rem 0 0', fontSize: '0.8125rem', color: 'var(--c-text-3)', overflowWrap: 'anywhere' }}>
                   {m.cargo ? `${m.cargo} · ` : ''}
                   {m.email}
                   {m.papel === 'colaborador' && ` · ${m.permissoes.length} de ${abas.length || 13} abas`}
                 </p>
+                {m.status === 'pendente' && m.expira_em && (
+                  <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: 'var(--c-text-3)' }}>
+                    {expirado(m) ? 'O convite expirou sem resposta. Reenvie para dar mais 14 dias.' : `Aguardando a pessoa aceitar. O convite vale até ${new Date(m.expira_em).toLocaleDateString('pt-BR')}.`}
+                  </p>
+                )}
               </div>
               {m.papel === 'colaborador' && !m.eh_voce && (
                 <div style={{ display: 'flex', gap: '0.375rem' }}>
                   <button type="button" onClick={() => setSelecionado(m.id)} style={{ padding: '0.4rem 0.75rem', borderRadius: '0.625rem', border: '1px solid var(--c-input-border)', background: 'transparent', color: 'var(--c-text-1)', fontWeight: 600, fontSize: '0.8125rem', fontFamily: 'inherit', cursor: 'pointer' }}>
                     Permissões
                   </button>
-                  <button type="button" onClick={() => remover(m)} aria-label={`Remover ${m.nome} da equipe`} style={{ background: 'none', border: '1px solid var(--c-divider)', borderRadius: '0.625rem', padding: '0.4rem', color: 'var(--c-danger-text)', cursor: 'pointer', display: 'flex' }}>
+                  {m.status === 'pendente' && (
+                    <button type="button" onClick={() => reenviar(m)} style={{ padding: '0.4rem 0.75rem', borderRadius: '0.625rem', border: '1px solid var(--c-input-border)', background: 'transparent', color: 'var(--c-text-1)', fontWeight: 600, fontSize: '0.8125rem', fontFamily: 'inherit', cursor: 'pointer' }}>
+                      Reenviar
+                    </button>
+                  )}
+                  <button type="button" onClick={() => remover(m)} aria-label={m.status === 'pendente' ? `Cancelar o convite de ${m.email}` : `Remover ${m.nome} da equipe`} style={{ background: 'none', border: '1px solid var(--c-divider)', borderRadius: '0.625rem', padding: '0.4rem', color: 'var(--c-danger-text)', cursor: 'pointer', display: 'flex' }}>
                     <IconTrash size={16} aria-hidden />
                   </button>
                 </div>
@@ -175,7 +205,7 @@ export default function AbaEquipe({ salvo }: PropsAba) {
 
         <form onSubmit={adicionar} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid var(--c-divider)' }}>
           <Grade>
-            <Campo rotulo="Adicionar pessoa pelo e-mail" ajuda={QUEM_PODE_ENTRAR}>
+            <Campo rotulo="Convidar pessoa pelo e-mail" ajuda={QUEM_PODE_ENTRAR}>
               <Texto valor={email} onChange={setEmail} placeholder="pessoa@exemplo.com" inputMode="email" tipo="email" />
             </Campo>
             <Campo rotulo="Cargo (opcional)" ajuda="Texto livre, aparece só para a equipe. Ex.: Fotógrafo, Recepção.">
@@ -184,7 +214,7 @@ export default function AbaEquipe({ salvo }: PropsAba) {
           </Grade>
           <div>
             <button type="submit" disabled={enviando || !email.trim()} style={{ ...botaoPrimario, opacity: enviando || !email.trim() ? 0.6 : 1 }}>
-              <IconUserPlus size={18} aria-hidden /> {enviando ? 'Adicionando…' : 'Adicionar à equipe'}
+              <IconUserPlus size={18} aria-hidden /> {enviando ? 'Enviando…' : 'Enviar convite'}
             </button>
           </div>
         </form>
@@ -199,7 +229,7 @@ export default function AbaEquipe({ salvo }: PropsAba) {
           <>
             <Grade>
               <Campo rotulo="Colaborador">
-                <Selecao valor={selecionado} onChange={setSelecionado} vazio="Selecione um colaborador" opcoes={editaveis.map((m) => ({ valor: m.id, rotulo: m.cargo ? `${m.nome} (${m.cargo})` : m.nome }))} />
+                <Selecao valor={selecionado} onChange={setSelecionado} vazio="Selecione um colaborador" opcoes={editaveis.map((m) => ({ valor: m.id, rotulo: `${m.cargo ? `${m.nome} (${m.cargo})` : m.nome}${m.status === 'pendente' ? ' — convite pendente' : ''}` }))} />
               </Campo>
               {membro && (
                 <Campo rotulo="Cargo">

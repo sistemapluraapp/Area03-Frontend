@@ -7,6 +7,7 @@ import Grain from '@/components/Grain'
 import Footer from '@/components/Footer'
 import Header from '@/components/GovHeader'
 import { Aviso } from '@/components/editor/Campos'
+import ConvitesEquipe from '@/components/ConvitesEquipe'
 import { apiPaginas, diasRestantesLixeira, type PaginaCompleta } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
 import { useTituloPagina } from '@/lib/useTituloPagina'
@@ -20,7 +21,7 @@ export default function MinhasPaginasPage() {
   useTituloPagina('Minhas páginas')
   const router = useRouter()
   const [itens, setItens] = useState<{ papel: string; cargo?: string | null; paginas: PaginaCompleta }[]>([])
-  const [outraArea, setOutraArea] = useState<{ nome: string; url: string; total: number } | null>(null)
+  const [outraArea, setOutraArea] = useState<{ nome: string; url: string; total: number; convites?: number } | null>(null)
   const [podeCriar, setPodeCriar] = useState(true)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -32,6 +33,14 @@ export default function MinhasPaginasPage() {
       router.replace('/login')
       return
     }
+    carregarPaginas()
+    if (new URLSearchParams(window.location.search).get('apagada')) {
+      setMensagem('A página foi para a lixeira. Você pode restaurá-la por 30 dias.')
+      window.history.replaceState(null, '', '/')
+    }
+  }, [router])
+
+  function carregarPaginas() {
     apiPaginas
       .minhas()
       .then(({ paginas, outra_area, pode_criar }) => {
@@ -41,11 +50,7 @@ export default function MinhasPaginasPage() {
       })
       .catch((e) => setErro(e instanceof Error ? e.message : 'Erro ao carregar páginas'))
       .finally(() => setCarregando(false))
-    if (new URLSearchParams(window.location.search).get('apagada')) {
-      setMensagem('A página foi para a lixeira. Você pode restaurá-la por 30 dias.')
-      window.history.replaceState(null, '', '/')
-    }
-  }, [router])
+  }
 
   const ativas = itens.filter((i) => !i.paginas.excluida_em)
   const lixeira = itens.filter((i) => i.paginas.excluida_em)
@@ -82,6 +87,14 @@ export default function MinhasPaginasPage() {
 
         {erro && <Aviso tipo="erro">{erro}</Aviso>}
         {mensagem && <Aviso tipo="sucesso">{mensagem}</Aviso>}
+
+        <ConvitesEquipe onAceito={carregarPaginas} />
+        {outraArea && (outraArea.convites ?? 0) > 0 && (
+          <div style={{ marginBottom: '1rem' }}><Aviso tipo="info">
+            Você tem {outraArea.convites === 1 ? '1 convite' : `${outraArea.convites} convites`} para equipe em {outraArea.nome}.{' '}
+            <a href={`${outraArea.url.replace(/\/$/, '')}/#convites`} style={{ color: 'inherit', fontWeight: 700 }}>Ver convites</a>
+          </Aviso></div>
+        )}
 
         {carregando ? (
           <Carregando />

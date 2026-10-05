@@ -141,6 +141,23 @@ export interface VinculoPagina {
   conta_id: string
   created_at: string
   eh_voce: boolean
+  // 'pendente': convite enviado, ainda sem acesso; 'ativo': aceitou
+  status: 'pendente' | 'ativo'
+  convidado_em: string | null
+  expira_em: string | null
+}
+
+export interface ConviteRecebido {
+  id: string
+  pagina_id: string
+  pagina_nome: string
+  pagina_tipo: string
+  pagina_logo: string | null
+  cargo: string | null
+  permissoes: string[]
+  convidado_por_nome: string
+  convidado_em: string
+  expira_em: string
 }
 
 export interface MeuAcesso {
@@ -233,7 +250,7 @@ export const apiPaginas = {
   minhas: () =>
     request<{
       paginas: { papel: string; cargo: string | null; paginas: PaginaCompleta }[]
-      outra_area: { nome: string; url: string; total: number }
+      outra_area: { nome: string; url: string; total: number; convites?: number }
       pode_criar: boolean
     }>('/minhas-paginas'),
 
@@ -303,6 +320,14 @@ export const apiPaginas = {
     request<VinculoPagina>(`/paginas/${id}/colaboradores/${vinculoId}`, { method: 'PATCH', body: JSON.stringify(body) }),
 
   removerMembro: (id: string, vinculoId: string) => request<void>(`/paginas/${id}/colaboradores/${vinculoId}`, { method: 'DELETE' }),
+
+  reenviarConvite: (id: string, vinculoId: string) =>
+    request<VinculoPagina>(`/paginas/${id}/colaboradores/${vinculoId}/reenviar`, { method: 'POST' }),
+
+  // Convites recebidos por quem está logado
+  meusConvites: () => request<{ convites: ConviteRecebido[] }>('/convites-equipe'),
+  responderConvite: (vinculoId: string, aceitar: boolean) =>
+    request<{ aceito: boolean; pagina_id: string; pagina_nome: string }>(`/convites-equipe/${vinculoId}/${aceitar ? 'aceitar' : 'recusar'}`, { method: 'POST' }),
 
   logs: (id: string) => request<{ logs: LogPagina[] }>(`/paginas/${id}/logs?limite=200`),
 }

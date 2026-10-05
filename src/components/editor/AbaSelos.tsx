@@ -1,80 +1,87 @@
 'use client'
 
-import { useState } from 'react'
-import { IconRosetteDiscountCheck, IconSparkles } from '@tabler/icons-react'
-import Icone from '../Icone'
+import { useEffect, useState } from 'react'
+import { IconChevronRight, IconSearch } from '@tabler/icons-react'
+import Carregando from '@/components/Carregando'
 import { Aviso, Secao } from './Campos'
-import { api } from '@/lib/api'
+import { IconeCertificacao, SeloStatus, botaoPrimario } from '@/components/certificacoes/Comuns'
+import Preenchimento from '@/components/certificacoes/Preenchimento'
+import { apiCertificacoes, type Inscricao } from '@/lib/apiCertificacoes'
 import type { PropsAba } from './tipos'
 
-// TODO(selos): área de "Selos e certificações" ainda será desenhada (landing
-// page com selos, benefícios e botão de solicitar; aprovação pela Área 04).
-// Por enquanto esta aba é só uma prévia visual, igual em todas as áreas.
-const SELOS_EXEMPLO = [
-  { icone: 'wheelchair', rotulo: 'Acessibilidade física' },
-  { icone: 'hand-finger', rotulo: 'Libras' },
-  { icone: 'braille', rotulo: 'Braille' },
-  { icone: 'headphones', rotulo: 'Audiodescrição' },
-  { icone: 'brain', rotulo: 'Acessibilidade sensorial' },
-]
+// Etapa 8b: inscrições da página nas certificações da Plura (ADM)
+function abrirNaUrl(inscricaoId: string | null) {
+  const url = new URL(window.location.href)
+  if (inscricaoId) url.searchParams.set('inscricao', inscricaoId)
+  else url.searchParams.delete('inscricao')
+  window.history.replaceState(null, '', url)
+}
 
-export default function AbaSelos({ rascunho: p, aplicarSalvo }: PropsAba) {
-  const [solicitando, setSolicitando] = useState(false)
+export default function AbaSelos({ rascunho: p }: PropsAba) {
+  const [inscricoes, setInscricoes] = useState<Inscricao[] | null>(null)
+  const [aberta, setAberta] = useState<string | null>(null)
   const [erro, setErro] = useState('')
-  const certificados = p.certificados ?? []
 
-  async function solicitar() {
-    setSolicitando(true)
-    setErro('')
-    try {
-      const cert = await api.solicitarCertificado(p.id)
-      aplicarSalvo({ certificados: [...certificados, cert] })
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro ao solicitar certificado')
-    } finally {
-      setSolicitando(false)
-    }
+  function carregar() {
+    apiCertificacoes
+      .inscricoes(p.id)
+      .then((r) => setInscricoes(r.inscricoes))
+      .catch((e) => setErro(e instanceof Error ? e.message : 'Erro ao carregar as certificações'))
   }
 
-  return (
-    <>
-      <Secao titulo="Selos e certificações" descricao="Em breve: selos que mostram, com critérios claros, o que foi verificado no seu empreendimento.">
-        <div style={{ position: 'relative', borderRadius: '1rem', padding: '1.25rem', border: '1px dashed var(--c-input-border)', background: 'var(--c-glass-bg-sm)' }}>
-          <span style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '9999px', background: 'var(--c-accent-soft)', color: 'var(--c-accent-text)' }}>
-            <IconSparkles size={14} aria-hidden /> Em breve
-          </span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.75rem', opacity: 0.75 }} aria-hidden>
-            {SELOS_EXEMPLO.map((s) => (
-              <div key={s.rotulo} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '1rem 0.5rem', borderRadius: '0.875rem', border: 'var(--c-border)', background: 'var(--c-glass-bg)' }}>
-                <span style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--c-accent-soft)', color: 'var(--c-accent-text)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icone nome={s.icone} size={24} />
-                </span>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 600, textAlign: 'center' }}>{s.rotulo}</span>
-              </div>
-            ))}
-          </div>
-          <button type="button" disabled style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.125rem', borderRadius: '0.75rem', border: '1px solid var(--c-btn-secondary-border)', background: 'var(--c-btn-secondary-bg)', color: 'var(--c-text-2)', fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed' }}>
-            <IconRosetteDiscountCheck size={18} aria-hidden /> Ver selos e solicitar
-          </button>
-        </div>
-      </Secao>
+  useEffect(() => {
+    setAberta(new URLSearchParams(window.location.search).get('inscricao'))
+    carregar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.id])
 
-      <Secao titulo="Certificado de acessibilidade" descricao="Solicitação atual, analisada pela equipe da Plura.">
-        {certificados.length === 0 ? (
-          <p style={{ color: 'var(--c-text-3)', fontSize: '0.9rem' }}>Nenhuma solicitação ainda.</p>
-        ) : (
-          certificados.map((cert) => (
-            <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--c-glass-bg-sm)', borderRadius: '0.65rem', fontSize: '0.875rem' }}>
-              <span>{new Date(cert.solicitado_em).toLocaleDateString('pt-BR')}</span>
-              <span style={{ fontWeight: 700, color: cert.status === 'aprovado' ? 'var(--c-success-text)' : cert.status === 'reprovado' ? 'var(--c-danger-text)' : 'var(--c-text-2)' }}>{cert.status}</span>
-            </div>
-          ))
-        )}
-        {erro && <Aviso tipo="erro">{erro}</Aviso>}
-        <button type="button" disabled={solicitando} onClick={solicitar} style={{ alignSelf: 'flex-start', padding: '0.6rem 1.125rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg,#1a7aff,#0062e6)', color: '#fff', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', opacity: solicitando ? 0.6 : 1 }}>
-          {solicitando ? 'Enviando…' : 'Solicitar certificado'}
-        </button>
-      </Secao>
-    </>
+  function abrir(id: string | null) {
+    setAberta(id)
+    abrirNaUrl(id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (!id) carregar()
+  }
+
+  if (aberta) return <Preenchimento paginaId={p.id} inscricaoId={aberta} onVoltar={() => abrir(null)} />
+
+  const ativas = (inscricoes ?? []).filter((i) => i.status !== 'cancelada')
+  const canceladas = (inscricoes ?? []).filter((i) => i.status === 'cancelada')
+
+  return (
+    <Secao titulo="Selos e certificações" descricao="Certificações da Plura mostram, com critérios claros, o que foi verificado no seu espaço. Escolha uma, preencha os requisitos e envie para análise.">
+      <a href="/certificacoes" style={{ ...botaoPrimario, alignSelf: 'flex-start' }}>
+        <IconSearch size={17} aria-hidden /> Buscar certificações
+      </a>
+      {erro && <Aviso tipo="erro">{erro}</Aviso>}
+      {inscricoes === null ? (
+        !erro && <Carregando compacto />
+      ) : ativas.length === 0 ? (
+        <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--c-text-3)' }}>Esta página ainda não está inscrita em nenhuma certificação.</p>
+      ) : (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+          {ativas.map((i) => (
+            <li key={i.id}>
+              <button type="button" onClick={() => abrir(i.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem 1rem', borderRadius: '1rem', border: 'var(--c-border)', background: 'var(--c-glass-bg)', color: 'inherit', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+                <IconeCertificacao icone={i.certificacao?.icone ?? null} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <strong style={{ display: 'block' }}>{i.certificacao?.titulo ?? 'Certificação'}</strong>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem', fontSize: '0.8125rem', color: 'var(--c-text-3)' }}>
+                    <SeloStatus status={i.status} />
+                    {i.status === 'aprovada' && i.expira_em ? `válida até ${new Date(i.expira_em).toLocaleDateString('pt-BR')}` : `desde ${new Date(i.created_at).toLocaleDateString('pt-BR')}`}
+                  </span>
+                </span>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--c-accent-text)' }}>{i.status === 'em_andamento' ? 'Continuar' : 'Ver'}</span>
+                <IconChevronRight size={18} aria-hidden style={{ color: 'var(--c-text-3)' }} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {canceladas.length > 0 && (
+        <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--c-text-3)' }}>
+          {canceladas.length === 1 ? '1 inscrição cancelada' : `${canceladas.length} inscrições canceladas`}: {canceladas.map((i) => i.certificacao?.titulo).join(', ')}.
+        </p>
+      )}
+    </Secao>
   )
 }

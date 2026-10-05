@@ -450,3 +450,6 @@ html[data-movimento='reduzido'] *, html[data-movimento='reduzido'] *::before, ht
   .editor-menu-lista[data-aberto='true'] { display: flex; }
 }
 @media (prefers-reduced-motion: reduce) { .editor-menu-seta { transition: none; } }
+
+/* Detalhe da certificação (8b): inscrição ao lado no computador */
+@media (min-width: 900px) { .cert-detalhe { grid-template-columns: minmax(0, 1fr) 320px !important; } .cert-detalhe > aside { position: sticky; top: 84px; } }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { IconBuildingStore, IconPlus, IconRestore, IconTrash } from '@tabler/icons-react'
+import { IconBuildingStore, IconPlus, IconRestore, IconTrash, IconCertificate } from '@tabler/icons-react'
 import Grain from '@/components/Grain'
 import Footer from '@/components/Footer'
 import Header from '@/components/GovHeader'
@@ -82,7 +82,12 @@ export default function MinhasPaginasPage() {
       <main id="conteudo" tabIndex={-1} style={{ maxWidth: '1040px', margin: '0 auto', padding: '2rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Minhas páginas</h1>
-          {podeCriar && botaoNova}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <a href="/certificacoes" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.6rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--c-input-border)', color: 'var(--c-text-1)', fontWeight: 600, textDecoration: 'none' }}>
+              <IconCertificate size={18} aria-hidden /> Buscar certificações
+            </a>
+            {podeCriar && botaoNova}
+          </div>
         </div>
 
         {erro && <Aviso tipo="erro">{erro}</Aviso>}

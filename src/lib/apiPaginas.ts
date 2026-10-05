@@ -249,7 +249,7 @@ export const apiPaginas = {
 
   minhas: () =>
     request<{
-      paginas: { papel: string; cargo: string | null; paginas: PaginaCompleta }[]
+      paginas: { papel: string; cargo: string | null; permissoes?: string[]; paginas: PaginaCompleta }[]
       outra_area: { nome: string; url: string; total: number; convites?: number }
       pode_criar: boolean
     }>('/minhas-paginas'),

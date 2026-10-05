@@ -22,6 +22,7 @@ import AbaAntesDeIr from '@/components/editor/AbaAntesDeIr'
 import AbaComentarios from '@/components/editor/AbaComentarios'
 import AbaEquipe from '@/components/editor/AbaEquipe'
 import AbaSelos from '@/components/editor/AbaSelos'
+import MenuSecoes from '@/components/editor/MenuSecoes'
 import { apiPaginas, type CamposEditaveis, type Opcoes, type PaginaDetalhe } from '@/lib/apiPaginas'
 import { estaLogado } from '@/lib/auth'
 import { useTituloPagina } from '@/lib/useTituloPagina'
@@ -184,42 +185,22 @@ function Editor() {
         </div>
       )}
 
-      <nav role="tablist" aria-label="Seções do editor" style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.5rem', marginBottom: '1.25rem', scrollbarWidth: 'thin' }}>
-        {abasVisiveis.map((a) => (
-          <button
-            key={a.id}
-            role="tab"
-            aria-selected={abaAtual?.id === a.id}
-            onClick={() => trocarAba(a.id)}
-            style={{
-              flexShrink: 0,
-              padding: '0.5rem 0.95rem',
-              borderRadius: '9999px',
-              border: abaAtual?.id === a.id ? '1px solid var(--c-accent-soft-border)' : '1px solid var(--c-divider)',
-              background: abaAtual?.id === a.id ? 'var(--c-accent-soft)' : 'transparent',
-              color: abaAtual?.id === a.id ? 'var(--c-accent-text)' : 'var(--c-text-2)',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              fontFamily: 'inherit',
-              cursor: 'pointer',
-            }}
-          >
-            {a.rotulo}
-          </button>
-        ))}
-      </nav>
+      <div className="editor-layout">
+        <MenuSecoes secoes={abasVisiveis} atual={abaAtual?.id ?? null} aoTrocar={trocarAba} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: alterado ? '6rem' : 0 }}>
-        {Atual ? (
-          <Atual rascunho={rascunho} salvo={salvo} alterar={alterar} aplicarSalvo={aplicarSalvo} opcoes={opcoes} />
-        ) : (
-          <Aviso>O dono da página ainda não liberou nenhuma aba para você editar. Peça a ele para marcar as suas permissões em “Equipe e logs”.</Aviso>
-        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', minWidth: 0, paddingBottom: alterado ? '6rem' : 0 }}>
+          {Atual ? (
+            <Atual rascunho={rascunho} salvo={salvo} alterar={alterar} aplicarSalvo={aplicarSalvo} opcoes={opcoes} />
+          ) : (
+            <Aviso>O dono da página ainda não liberou nenhuma aba para você editar. Peça a ele para marcar as suas permissões em “Equipe e logs”.</Aviso>
+          )}
+        </div>
       </div>
 
       {(alterado || erro || mensagem) && (
         <div role="region" aria-label="Salvar alterações" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 200, padding: '0.875rem 1rem', background: 'var(--c-modal-bg)', borderTop: '1px solid var(--c-divider)', boxShadow: '0 -8px 24px rgba(0,0,0,0.12)' }}>
-          <div style={{ maxWidth: '980px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <span style={{ flex: '1 1 200px', fontSize: '0.875rem', color: erro ? 'var(--c-danger-text)' : alterado ? 'var(--c-text-1)' : 'var(--c-success-text)', fontWeight: 600 }}>
               {erro || (alterado ? 'Você tem alterações não salvas.' : mensagem)}
             </span>
@@ -245,7 +226,7 @@ export default function EditorPaginaPage() {
     <>
       <Grain />
       <Header />
-      <main id="conteudo" tabIndex={-1} style={{ maxWidth: '980px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
+      <main id="conteudo" tabIndex={-1} style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.75rem 1.25rem 3rem', position: 'relative', zIndex: 1 }}>
         <Suspense fallback={<Carregando />}>
           <Editor />
         </Suspense>

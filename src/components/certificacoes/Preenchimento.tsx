@@ -1,11 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { IconArrowLeft, IconCheck, IconLock, IconSend } from '@tabler/icons-react'
+import { IconArrowLeft, IconCheck, IconDownload, IconLock, IconPaperclip, IconPlus, IconSend, IconTrash } from '@tabler/icons-react'
 import Carregando from '@/components/Carregando'
 import { Aviso } from '@/components/editor/Campos'
 import { IconeCertificacao, SeloStatus, botaoPrimario, botaoSecundario } from './Comuns'
-import { apiCertificacoes, type CampoFormulario, type InscricaoDetalhe, type Requisito, type Resposta } from '@/lib/apiCertificacoes'
+import { EXTENSOES_ACEITAS, MAX_ARQUIVO_BYTES, apiCertificacoes, tamanhoLegivel, type ArquivoEnviado, type CampoFormulario, type DataVistoria, type InscricaoDetalhe, type Requisito, type Resposta } from '@/lib/apiCertificacoes'
 import { ROTULO_TIPO_REQUISITO } from '@/lib/rotulosCertificacoes'
 
 type Valor = Resposta['valor']
@@ -69,7 +69,162 @@ function CamposFormulario({ campos, valor, onChange, desativado, prefixo }: { ca
   )
 }
 
-function ItemRequisito({ req, resposta, editavel, valor, onChange, onSalvar, salvando, alterado }: {
+const PERIODO = { manha: 'Manhã', tarde: 'Tarde' } as const
+
+function amanha() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().slice(0, 10)
+}
+
+function dataBr(iso: string) {
+  const [a, m, d] = iso.split('-')
+  return `${d}/${m}/${a}`
+}
+
+// Arquivos: cada envio vai direto para o armazenamento (não usa o botão Salvar)
+function ArquivosRequisito({ req, itens, editavel, paginaId, inscricaoId, onResposta, onErro }: {
+  req: Requisito
+  itens: ArquivoEnviado[]
+  editavel: boolean
+  paginaId: string
+  inscricaoId: string
+  onResposta: (r: Resposta) => void
+  onErro: (m: string) => void
+}) {
+  const [enviando, setEnviando] = useState<string | null>(null)
+  const [removendo, setRemovendo] = useState<string | null>(null)
+  const max = Math.min(Math.max(req.config.max_arquivos ?? 1, 1), 10)
+  const id = `arq-${req.id}`
+
+  async function enviar(arquivo: File | undefined) {
+    if (!arquivo) return
+    if (arquivo.size > MAX_ARQUIVO_BYTES) return onErro(`"${arquivo.name}" passa de 25 MB.`)
+    setEnviando(arquivo.name)
+    onErro('')
+    try {
+      onResposta(await apiCertificacoes.enviarArquivo(paginaId, inscricaoId, req.id, arquivo))
+    } catch (e) {
+      onErro(e instanceof Error ? e.message : 'Não foi possível enviar o arquivo')
+    } finally {
+      setEnviando(null)
+    }
+  }
+
+  async function remover(item: ArquivoEnviado) {
+    if (!confirm(`Remover "${item.nome}"?`)) return
+    setRemovendo(item.chave)
+    onErro('')
+    try {
+      await apiCertificacoes.removerArquivo(paginaId, inscricaoId, req.id, item.chave)
+      const restantes = itens.filter((i) => i.chave !== item.chave)
+      onResposta({ requisito_id: req.id, valor: { itens: restantes }, status: 'rascunho', comentario_adm: null, updated_at: new Date().toISOString() })
+    } catch (e) {
+      onErro(e instanceof Error ? e.message : 'Não foi possível remover')
+    } finally {
+      setRemovendo(null)
+    }
+  }
+
+  async function baixar(item: ArquivoEnviado) {
+    try {
+      await apiCertificacoes.baixarArquivo(paginaId, inscricaoId, req.id, item)
+    } catch (e) {
+      onErro(e instanceof Error ? e.message : 'Não foi possível baixar')
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {itens.length > 0 && (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+          {itens.map((item) => (
+            <li key={item.chave} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '0.75rem', background: 'var(--c-glass-bg-sm)', border: '1px solid var(--c-divider)' }}>
+              <IconPaperclip size={16} aria-hidden style={{ flexShrink: 0, color: 'var(--c-text-3)' }} />
+              <span style={{ flex: 1, minWidth: 0, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {item.nome} <span style={{ color: 'var(--c-text-3)' }}>· {tamanhoLegivel(item.tamanho)}</span>
+              </span>
+              <button type="button" onClick={() => baixar(item)} aria-label={`Baixar ${item.nome}`} style={{ ...botaoSecundario, padding: '0.3rem 0.6rem' }}>
+                <IconDownload size={15} aria-hidden />
+              </button>
+              {editavel && (
+                <button type="button" onClick={() => remover(item)} disabled={removendo === item.chave} aria-label={`Remover ${item.nome}`} style={{ ...botaoSecundario, padding: '0.3rem 0.6rem', color: 'var(--c-danger-text)' }}>
+                  <IconTrash size={15} aria-hidden />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {editavel && itens.length < max && (
+        <div>
+          <label htmlFor={id} style={{ ...botaoSecundario, opacity: enviando ? 0.6 : 1, cursor: enviando ? 'wait' : 'pointer' }}>
+            <IconPlus size={16} aria-hidden /> {enviando ? `Enviando ${enviando}…` : itens.length ? 'Enviar outro arquivo' : 'Escolher arquivo'}
+          </label>
+          <input
+            id={id}
+            type="file"
+            accept={EXTENSOES_ACEITAS}
+            disabled={!!enviando}
+            onChange={(e) => {
+              enviar(e.target.files?.[0])
+              e.target.value = ''
+            }}
+            className="sr-only"
+          />
+        </div>
+      )}
+      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--c-text-3)' }}>
+        {itens.length} de {max} {max === 1 ? 'arquivo' : 'arquivos'} · até 25 MB cada · PDF, imagens, documentos, planilhas ou vídeo MP4/MOV
+      </p>
+    </div>
+  )
+}
+
+// Vistoria: até 3 datas (manhã ou tarde), contato e observações
+function VistoriaRequisito({ valor, onChange, editavel, prefixo }: { valor: Valor | undefined; onChange: (v: Valor) => void; editavel: boolean; prefixo: string }) {
+  const datas = (valor?.itens ?? []) as DataVistoria[]
+  const mudarData = (i: number, patch: Partial<DataVistoria>) => onChange({ ...valor, itens: datas.map((d, j) => (j === i ? { ...d, ...patch } : d)) })
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+      {valor?.confirmada && (
+        <Aviso tipo="sucesso">Vistoria confirmada para {dataBr(valor.confirmada.data)} ({PERIODO[valor.confirmada.periodo as keyof typeof PERIODO] ?? valor.confirmada.periodo}).</Aviso>
+      )}
+      <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--c-text-2)' }}>Sugira até 3 datas. A Plura confirma uma delas.</p>
+      {datas.map((d, i) => (
+        <div key={i} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <label className="sr-only" htmlFor={`${prefixo}-d${i}`}>Data {i + 1}</label>
+          <input id={`${prefixo}-d${i}`} type="date" min={amanha()} value={d.data} onChange={(e) => mudarData(i, { data: e.target.value })} disabled={!editavel} style={{ ...campo, width: 'auto', flex: '1 1 160px' }} />
+          <label className="sr-only" htmlFor={`${prefixo}-p${i}`}>Período da data {i + 1}</label>
+          <select id={`${prefixo}-p${i}`} value={d.periodo} onChange={(e) => mudarData(i, { periodo: e.target.value as DataVistoria['periodo'] })} disabled={!editavel} style={{ ...campo, width: 'auto', flex: '1 1 120px' }}>
+            <option value="manha">Manhã</option>
+            <option value="tarde">Tarde</option>
+          </select>
+          {editavel && (
+            <button type="button" onClick={() => onChange({ ...valor, itens: datas.filter((_, j) => j !== i) })} aria-label={`Remover data ${i + 1}`} style={{ ...botaoSecundario, padding: '0.45rem 0.6rem', color: 'var(--c-danger-text)' }}>
+              <IconTrash size={15} aria-hidden />
+            </button>
+          )}
+        </div>
+      ))}
+      {editavel && datas.length < 3 && (
+        <button type="button" onClick={() => onChange({ ...valor, itens: [...datas, { data: amanha(), periodo: 'manha' }] })} style={{ ...botaoSecundario, alignSelf: 'flex-start' }}>
+          <IconPlus size={16} aria-hidden /> Adicionar data
+        </button>
+      )}
+      <label htmlFor={`${prefixo}-contato`} style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--c-text-2)' }}>Quem recebe a vistoria (nome e telefone)</label>
+      <input id={`${prefixo}-contato`} value={valor?.contato ?? ''} onChange={(e) => onChange({ ...valor, contato: e.target.value })} maxLength={200} disabled={!editavel} style={campo} />
+      <label htmlFor={`${prefixo}-obs`} style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--c-text-2)' }}>Observações (opcional)</label>
+      <textarea id={`${prefixo}-obs`} value={valor?.observacoes ?? ''} onChange={(e) => onChange({ ...valor, observacoes: e.target.value })} rows={2} maxLength={2000} disabled={!editavel} style={{ ...campo, resize: 'vertical' }} />
+    </div>
+  )
+}
+
+function ItemRequisito({ req, resposta, editavel, valor, onChange, onSalvar, salvando, alterado, paginaId, inscricaoId, onResposta, onErro }: {
+  paginaId: string
+  inscricaoId: string
+  onResposta: (r: Resposta) => void
+  onErro: (m: string) => void
   req: Requisito
   resposta: Resposta | undefined
   editavel: boolean
@@ -80,7 +235,7 @@ function ItemRequisito({ req, resposta, editavel, valor, onChange, onSalvar, sal
   alterado: boolean
 }) {
   const st = resposta ? ROTULO_RESPOSTA[resposta.status] : null
-  const emBreve = req.tipo === 'arquivo' || req.tipo === 'vistoria'
+  const ehArquivo = req.tipo === 'arquivo'
   const id = `req-${req.id}`
   return (
     <li style={{ padding: '1rem', borderRadius: '0.875rem', border: resposta?.status === 'ajustes' ? '1px solid var(--c-danger-border)' : 'var(--c-border)', background: 'var(--c-glass-bg)' }}>
@@ -99,10 +254,10 @@ function ItemRequisito({ req, resposta, editavel, valor, onChange, onSalvar, sal
       )}
 
       <div style={{ marginTop: '0.75rem' }}>
-        {emBreve ? (
-          <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--c-text-3)' }}>
-            {req.tipo === 'arquivo' ? 'O envio de arquivos' : 'O agendamento de vistoria'} fica disponível na próxima atualização da Plura.
-          </p>
+        {ehArquivo ? (
+          <ArquivosRequisito req={req} itens={(resposta?.valor.itens ?? []) as ArquivoEnviado[]} editavel={editavel} paginaId={paginaId} inscricaoId={inscricaoId} onResposta={onResposta} onErro={onErro} />
+        ) : req.tipo === 'vistoria' ? (
+          <VistoriaRequisito valor={valor} onChange={onChange} editavel={editavel} prefixo={id} />
         ) : req.tipo === 'texto' ? (
           <>
             <label htmlFor={id} className="sr-only">Resposta para {req.titulo}</label>
@@ -119,13 +274,13 @@ function ItemRequisito({ req, resposta, editavel, valor, onChange, onSalvar, sal
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-        {editavel && !emBreve && (
+        {editavel && !ehArquivo && (
           <button type="button" onClick={onSalvar} disabled={!alterado || salvando} style={{ ...botaoSecundario, opacity: !alterado || salvando ? 0.55 : 1 }}>
             <IconCheck size={16} aria-hidden /> {salvando ? 'Salvando…' : 'Salvar'}
           </button>
         )}
         <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: alterado ? 'var(--c-text-1)' : st?.cor ?? 'var(--c-text-3)' }}>
-          {alterado ? 'Alteração não salva' : st?.texto ?? (emBreve ? '' : 'Ainda não respondido')}
+          {alterado ? 'Alteração não salva' : st?.texto ?? 'Ainda não respondido'}
         </span>
       </div>
     </li>
@@ -164,6 +319,11 @@ export default function Preenchimento({ paginaId, inscricaoId, onVoltar }: { pag
   if (!insc) return <Carregando />
 
   const emAndamento = insc.status === 'em_andamento'
+
+  function aplicarResposta(r: Resposta) {
+    setInsc((atual) => atual && { ...atual, respostas: [...atual.respostas.filter((x) => x.requisito_id !== r.requisito_id), r] })
+    setValores((v) => ({ ...v, [r.requisito_id]: r.valor }))
+  }
 
   async function salvar(req: Requisito) {
     setSalvando(req.id)
@@ -255,6 +415,10 @@ export default function Preenchimento({ paginaId, inscricaoId, onVoltar }: { pag
                       onSalvar={() => salvar(req)}
                       salvando={salvando === req.id}
                       alterado={alterados.includes(req.id)}
+                      paginaId={paginaId}
+                      inscricaoId={inscricaoId}
+                      onResposta={aplicarResposta}
+                      onErro={setErro}
                     />
                   )
                 })}

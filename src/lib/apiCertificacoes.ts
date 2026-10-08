@@ -1,4 +1,4 @@
-import { request } from './api'
+import { request, requestArquivo } from './api'
 
 // Etapa 8b: certificações publicadas pelo ADM e inscrições da página
 // (idêntico nas Áreas 02 e 03).
@@ -73,10 +73,40 @@ export interface Inscricao {
 
 export interface Resposta {
   requisito_id: string
-  valor: { texto?: string; url?: string; respostas?: (string | null)[]; itens?: unknown[] }
+  valor: {
+    texto?: string
+    url?: string
+    respostas?: (string | null)[]
+    // arquivo: ArquivoEnviado[]; vistoria: DataVistoria[]
+    itens?: (ArquivoEnviado | DataVistoria)[]
+    contato?: string
+    observacoes?: string
+    confirmada?: { data: string; periodo: string } | null
+  }
   status: StatusResposta
   comentario_adm: string | null
   updated_at: string
+}
+
+export interface ArquivoEnviado {
+  chave: string
+  nome: string
+  tamanho: number
+  tipo: string
+  enviado_em: string
+}
+
+export interface DataVistoria {
+  data: string
+  periodo: 'manha' | 'tarde'
+}
+
+export const EXTENSOES_ACEITAS = '.pdf,.jpg,.jpeg,.png,.webp,.heic,.doc,.docx,.xls,.xlsx,.odt,.ods,.txt,.csv,.mp4,.mov'
+export const MAX_ARQUIVO_BYTES = 25 * 1024 * 1024
+
+export function tamanhoLegivel(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`
 }
 
 export interface InscricaoDetalhe extends Omit<Inscricao, 'certificacao'> {
@@ -111,5 +141,25 @@ export const apiCertificacoes = {
   salvarResposta: (paginaId: string, inscricaoId: string, requisitoId: string, valor: Resposta['valor']) =>
     request<Resposta>(`/paginas/${paginaId}/inscricoes/${inscricaoId}/respostas/${requisitoId}`, { method: 'PUT', body: JSON.stringify({ valor }) }),
   enviar: (paginaId: string, inscricaoId: string) => request<{ status: StatusInscricao }>(`/paginas/${paginaId}/inscricoes/${inscricaoId}/enviar`, { method: 'POST' }),
+  enviarArquivo: async (paginaId: string, inscricaoId: string, requisitoId: string, arquivo: File) => {
+    const corpo = new FormData()
+    corpo.append('arquivo', arquivo)
+    const res = await requestArquivo(`/paginas/${paginaId}/inscricoes/${inscricaoId}/respostas/${requisitoId}/arquivos`, { method: 'POST', body: corpo })
+    return (await res.json()) as Resposta
+  },
+  removerArquivo: (paginaId: string, inscricaoId: string, requisitoId: string, chave: string) =>
+    request<{ ok: true }>(`/paginas/${paginaId}/inscricoes/${inscricaoId}/respostas/${requisitoId}/arquivos?chave=${encodeURIComponent(chave)}`, { method: 'DELETE' }),
+  // Baixa pelo backend (com login) e entrega ao navegador como download
+  baixarArquivo: async (paginaId: string, inscricaoId: string, requisitoId: string, item: ArquivoEnviado) => {
+    const res = await requestArquivo(`/paginas/${paginaId}/inscricoes/${inscricaoId}/respostas/${requisitoId}/arquivos?chave=${encodeURIComponent(item.chave)}`)
+    const url = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = url
+    a.download = item.nome
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  },
   cancelar: (paginaId: string, inscricaoId: string) => request<{ status: StatusInscricao }>(`/paginas/${paginaId}/inscricoes/${inscricaoId}/cancelar`, { method: 'POST' }),
 }

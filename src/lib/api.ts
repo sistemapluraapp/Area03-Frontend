@@ -79,6 +79,21 @@ export async function request<T>(path: string, options: RequestInit = {}, isRetr
   return data as T
 }
 
+// Envio (FormData) e download de arquivos: sem Content-Type JSON e devolvendo a resposta crua
+export async function requestArquivo(path: string, options: RequestInit = {}, isRetry = false): Promise<Response> {
+  const headers = new Headers(options.headers)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('plura_gov_token') : null
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
+  if (res.ok) return res
+  if (res.status === 401 && !isRetry) {
+    const renovou = await tentarRenovarSessao()
+    if (renovou) return requestArquivo(path, options, true)
+  }
+  const data = await res.json().catch(() => ({}))
+  throw new ApiError(data?.error ?? (res.status === 413 ? 'O arquivo passa de 25 MB' : 'Erro inesperado ao falar com o servidor'), { status: res.status, codigo: data?.codigo })
+}
+
 export interface Pagina {
   id: string
   tipo: string

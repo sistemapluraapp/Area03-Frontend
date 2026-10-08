@@ -42,7 +42,7 @@ export default function AbaSelos({ rascunho: p }: PropsAba) {
     if (!id) carregar()
   }
 
-  if (aberta) return <Preenchimento paginaId={p.id} inscricaoId={aberta} onVoltar={() => abrir(null)} />
+  if (aberta) return <Preenchimento paginaId={p.id} inscricaoId={aberta} onVoltar={() => abrir(null)} pagina={{ nome: p.nome, cidade: p.cidade ?? null, uf: p.uf ?? null }} />
 
   const ativas = (inscricoes ?? []).filter((i) => i.status !== 'cancelada')
   const canceladas = (inscricoes ?? []).filter((i) => i.status === 'cancelada')

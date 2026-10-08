@@ -1,12 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { IconArrowLeft, IconCheck, IconDownload, IconLock, IconPaperclip, IconPlus, IconSend, IconTrash } from '@tabler/icons-react'
+import { IconArrowLeft, IconCertificate, IconCheck, IconDownload, IconLock, IconPaperclip, IconPlus, IconSend, IconTrash } from '@tabler/icons-react'
 import Carregando from '@/components/Carregando'
 import { Aviso } from '@/components/editor/Campos'
 import { IconeCertificacao, SeloStatus, botaoPrimario, botaoSecundario } from './Comuns'
 import { EXTENSOES_ACEITAS, MAX_ARQUIVO_BYTES, apiCertificacoes, tamanhoLegivel, type ArquivoEnviado, type CampoFormulario, type DataVistoria, type InscricaoDetalhe, type Requisito, type Resposta } from '@/lib/apiCertificacoes'
 import { ROTULO_TIPO_REQUISITO } from '@/lib/rotulosCertificacoes'
+import { baixarCertificadoPdf } from '@/lib/certificadoPdf'
 
 type Valor = Resposta['valor']
 
@@ -288,7 +289,7 @@ function ItemRequisito({ req, resposta, editavel, valor, onChange, onSalvar, sal
 }
 
 // Preenchimento de uma inscrição: etapas liberadas, requisitos, envio e cancelamento
-export default function Preenchimento({ paginaId, inscricaoId, onVoltar }: { paginaId: string; inscricaoId: string; onVoltar: () => void }) {
+export default function Preenchimento({ paginaId, inscricaoId, onVoltar, pagina }: { paginaId: string; inscricaoId: string; onVoltar: () => void; pagina: { nome: string; cidade: string | null; uf: string | null } }) {
   const [insc, setInsc] = useState<InscricaoDetalhe | null>(null)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
@@ -382,7 +383,37 @@ export default function Preenchimento({ paginaId, inscricaoId, onVoltar }: { pag
       {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
       {erro && <Aviso tipo="erro">{erro}</Aviso>}
       {insc.status === 'enviada' && !aviso && <Aviso>Suas respostas estão com a equipe da Plura. Você recebe um aviso quando a análise terminar.</Aviso>}
-      {insc.status === 'aprovada' && <Aviso tipo="sucesso">Parabéns! Esta página tem a certificação{insc.expira_em ? ` até ${new Date(insc.expira_em).toLocaleDateString('pt-BR')}` : ''}.</Aviso>}
+      {insc.status === 'aprovada' && (
+        <>
+          <Aviso tipo="sucesso">
+            Parabéns! Esta página tem a certificação{insc.expira_em ? ` até ${new Date(insc.expira_em).toLocaleDateString('pt-BR')}` : ''}.
+            {insc.codigo && <> Código de verificação: <strong>{insc.codigo}</strong>. O selo já aparece na página pública.</>}
+          </Aviso>
+          {insc.codigo && (
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                style={botaoPrimario}
+                onClick={() =>
+                  baixarCertificadoPdf({
+                    codigo: insc.codigo!,
+                    certificacao: insc.certificacao.titulo,
+                    pagina: pagina.nome,
+                    local: [pagina.cidade, pagina.uf].filter(Boolean).join('/'),
+                    concedidaEm: insc.concedida_em ?? new Date().toISOString(),
+                    expiraEm: insc.expira_em,
+                  }).catch(() => setErro('Não foi possível gerar o PDF'))
+                }
+              >
+                <IconCertificate size={17} aria-hidden /> Baixar certificado (PDF)
+              </button>
+              <a href={`https://plura.app.br/verificar?codigo=${encodeURIComponent(insc.codigo)}`} target="_blank" rel="noopener noreferrer" style={botaoSecundario}>
+                Ver página de verificação
+              </a>
+            </div>
+          )}
+        </>
+      )}
       {insc.status === 'reprovada' && <Aviso tipo="erro">A certificação não foi aprovada.{insc.observacao_adm ? ` Motivo: ${insc.observacao_adm}` : ''}</Aviso>}
       {insc.status === 'cancelada' && <Aviso>Esta inscrição foi cancelada.</Aviso>}
 

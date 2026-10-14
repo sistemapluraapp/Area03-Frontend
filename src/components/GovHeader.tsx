@@ -30,7 +30,7 @@ export default function GovHeader() {
       <img src={LOGO_DATA_URI} alt="Plura" style={{ height: '28px', width: 'auto', objectFit: 'contain' }} draggable={false} />
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--c-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>área gov</span>
       <NavPrincipal
-        inicio={() => urlArea01('/')}
+        inicio={() => urlArea01('/buscar')}
         minhaArea="/"
         agenda={() => urlArea01('/agenda')}
         voltarPara="/"

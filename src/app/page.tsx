@@ -117,7 +117,7 @@ export default function MinhasPaginasPage() {
                   Você tem {outraArea.total === 1 ? '1 página' : `${outraArea.total} páginas`} em {outraArea.nome}: abrir
                 </a>
               )}
-              <a href={AREA01_URL} style={atalho}>Ir para a busca da Plura</a>
+              <a href={`${AREA01_URL}/buscar`} style={atalho}>Ir para a busca da Plura</a>
             </div>
           </div>
         ) : (

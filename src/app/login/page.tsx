@@ -52,7 +52,7 @@ export default function LoginPage() {
         setErro(err.message)
         setAtalhos([
           { texto: 'Ir para Plura para empresas', link: err.link ?? 'https://login.plura.app.br' },
-          { texto: 'Ir para a busca da Plura', link: AREA01_URL },
+          { texto: 'Ir para a busca da Plura', link: `${AREA01_URL}/buscar` },
         ])
       } else {
         setErro('E-mail ou senha incorretos.')

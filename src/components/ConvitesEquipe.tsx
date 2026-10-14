@@ -20,7 +20,7 @@ export default function ConvitesEquipe({ onAceito }: { onAceito: () => void }) {
   const [aviso, setAviso] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
 
   useEffect(() => {
-    apiPaginas.meusConvites().then((r) => setConvites(r.convites)).catch(() => {})
+    apiPaginas.meusConvites().then((r) => setConvites(r.convites ?? [])).catch(() => {})
   }, [])
 
   // Vindo do sino (/#convites): rola até a seção quando ela aparece

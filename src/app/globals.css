@@ -453,3 +453,8 @@ html[data-movimento='reduzido'] *, html[data-movimento='reduzido'] *::before, ht
 
 /* Detalhe da certificação (8b): inscrição ao lado no computador */
 @media (min-width: 900px) { .cert-detalhe { grid-template-columns: minmax(0, 1fr) 320px !important; } .cert-detalhe > aside { position: sticky; top: 84px; } }
+
+/* Tradução (Etapa 10): esconde a barra e o balão do tradutor do Google */
+.goog-te-banner-frame, .skiptranslate > iframe, #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+body { top: 0 !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }

@@ -69,6 +69,8 @@ export interface Inscricao {
   expira_em: string | null
   observacao_adm: string | null
   codigo?: string | null
+  renova_id?: string | null
+  renovada_por?: string | null
   certificacao: Pick<Certificacao, 'id' | 'titulo' | 'resumo' | 'icone' | 'imagem_url' | 'validade_meses'> | null
 }
 
